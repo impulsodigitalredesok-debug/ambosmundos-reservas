@@ -1,0 +1,20 @@
+{
+  "name": "Club Ambos Mundos Reservas",
+  "short_name": "Ambos Mundos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#004d40",
+  "theme_color": "#004d40",
+  "icons": [
+    {
+      "src": "icono-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icono-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

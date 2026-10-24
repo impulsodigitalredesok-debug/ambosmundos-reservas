@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Club Atlético Ambos Mundos - Reservas</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#004d40">
+
+    <style>
+        :root {
+            --primary-color: #004d40;
+            --accent-color: #26a69a;
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --danger-color: #e53935;
+            --success-color: #2e7d32;
+            --install-color: #ff8f00;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            box-sizing: border-box;
+            margin: 16px;
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            margin-top: 10px;
+        }
+
+        .install-banner {
+            background: linear-gradient(135deg, #ff8f00, #ffb300);
+            color: white;
+            padding: 14px 16px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(255, 143, 0, 0.3);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 16px;
+            border: none;
+            width: 100%;
+            transition: transform 0.1s;
+        }
+
+        .install-banner:hover {
+            transform: scale(1.02);
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        .sport-btn, .time-btn, .action-btn {
+            width: 100%;
+            padding: 14px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .sport-btn {
+            background-color: #e0f2f1;
+            color: var(--primary-color);
+            border: 2px solid var(--accent-color);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sport-btn:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .sport-price {
+            font-size: 13px;
+            font-weight: normal;
+            margin-top: 4px;
+            opacity: 0.85;
+        }
+
+        .time-btn {
+            background-color: #f1f8e9;
+            color: var(--success-color);
+            border: 1px solid #c8e6c9;
+            text-align: center;
+            font-size: 17px;
+        }
+
+        .time-btn.booked {
+            background-color: #ffebee;
+            color: var(--danger-color);
+            border-color: #ffcdd2;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+
+        .time-btn:not(.booked):hover {
+            background-color: #dcedc8;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 16px 0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        label {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .action-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .action-btn:hover {
+            background-color: #00332c;
+        }
+
+        .cancel-section {
+            margin-top: 20px;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .whatsapp-cancel-btn {
+            background-color: #25d366;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .whatsapp-cancel-btn:hover {
+            background-color: #1ebe5d;
+        }
+
+        .admin-link {
+            display: block;
+            margin-top: 15px;
+            color: #78909c;
+            font-size: 13px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .admin-link:hover {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+
+        /* Estilos Panel Admin */
+        .admin-card {
+            background: #fff;
+            max-width: 600px;
+        }
+        .stat-box {
+            background: #e0f2f1;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 1px solid var(--accent-color);
+        }
+        .stat-box h3 { margin: 0; color: var(--primary-color); font-size: 22px; }
+        .reserva-item {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 5px solid var(--accent-color);
+            font-size: 14px;
+        }
+        .reserva-item.cancelado {
+            border-left-color: var(--danger-color);
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+        .btn-cancel-admin {
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .loading {
+            text-align: center;
+            font-style: italic;
+            color: #666;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="main-container">
+    <button id="btnInstall" class="install-banner">
+        📲 ¡Instalar App en el Celular!
+    </button>
+
+    <h2>Club Atlético Ambos Mundos</h2>
+
+    <!-- PASO 1: Seleccionar Deporte -->
+    <div id="step-1" class="step active">
+        <h3>Seleccioná el deporte</h3>
+        
+        <button class="sport-btn" onclick="selectSport('Fútbol 5')">
+            Fútbol 5
+            <span class="sport-price">Precio: $40.000</span>
+        </button>
+        
+        <button class="sport-btn" onclick="selectSport('Fútbol 9')">
+            Fútbol 9
+            <span class="sport-price">Precio: $100.000</span>
+        </button>
+        
+        <button class="sport-btn" onclick="selectSport('Pádel')">
+            Pádel
+            <span class="sport-price">Precio: $40.000</span>
+        </button>
+
+        <div class="cancel-section">
+            <p style="font-size: 0.9em; color: #666; margin-bottom: 8px;">¿Necesitás cancelar o consultar un turno?</p>
+            <a href="https://wa.me/5492364351535?text=Hola!%20Quisiera%20consultar%20para%20cancelar%20o%20modificar%20un%20turno." 
+               target="_blank" 
+               class="whatsapp-cancel-btn">
+                💬 Cancelar / Consultar por WhatsApp
+            </a>
+            
+            <a class="admin-link" onclick="accesoAdministrador()">🔐 Acceso Administrador</a>
+        </div>
+    </div>
+
+    <!-- PASO 2: Ingresar Datos -->
+    <div id="step-2" class="step">
+        <h3>Tus datos</h3>
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" placeholder="Ingresá tu nombre">
+
+        <label for="celular">Celular (10 dígitos sin 0 ni 15):</label>
+        <input type="tel" id="celular" placeholder="Ej: 2364123456" maxlength="10">
+
+        <button class="action-btn" onclick="validateStep2()">Continuar</button>
+        <button class="action-btn" style="background-color: #78909c;" onclick="changeStep(1)">Volver</button>
+    </div>
+
+    <!-- PASO 3: Fecha y Hora -->
+    <div id="step-3" class="step">
+        <h3 id="step3-title">Elegí fecha y hora</h3>
+        <label for="fecha">Fecha:</label>
+        <input type="date" id="fecha" onchange="cargarHorariosDisponibles()">
+
+        <div id="loading-horarios" class="loading" style="display: none;">Cargando turnos disponibles...</div>
+        <div id="horarios-container" style="max-height: 300px; overflow-y: auto; margin-top: 10px;"></div>
+
+        <button class="action-btn" style="background-color: #78909c; margin-top: 15px;" onclick="changeStep(2)">Volver</button>
+    </div>
+
+    <!-- PASO 4: Éxito / Confirmación -->
+    <div id="step-4" class="step">
+        <div style="text-align: center; padding: 10px;">
+            <h2 style="color: var(--success-color);">¡Turno confirmado con éxito! 🎉</h2>
+            <p>Tu reserva quedó registrada en el sistema del club.</p>
+            <p id="precio-info" style="font-weight: bold; color: var(--primary-color); font-size: 18px;"></p>
+            <p><b>Serás redirigido a WhatsApp automáticamente...</b></p>
+        </div>
+    </div>
+
+    <!-- PANEL DE ADMINISTRACIÓN -->
+    <div id="step-admin" class="step">
+        <h3 style="color: var(--primary-color);">Panel de Administración 🛠️</h3>
+        
+        <div class="stat-box">
+            <span>Recaudación Total Activa (Sin Cancelados)</span>
+            <h3 id="admin-recaudacion">$0</h3>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <button class="action-btn" style="padding: 10px; font-size: 14px;" onclick="cargarPanelAdmin()">🔄 Actualizar Lista</button>
+        </div>
+
+        <h4 style="margin-bottom: 5px;">Listado de Turnos Registrados:</h4>
+        <div id="admin-lista-turnos" style="max-height: 320px; overflow-y: auto; margin-bottom: 15px;">
+            <div class="loading">Cargando turnos...</div>
+        </div>
+
+        <button class="action-btn" style="background-color: #78909c;" onclick="changeStep(1)">Cerrar Panel Admin</button>
+    </div>
+</div>
+
+<script>
+    let deferredPrompt;
+    const btnInstall = document.getElementById('btnInstall');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        btnInstall.style.display = 'flex';
+    });
+
+    btnInstall.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            let { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            btnInstall.style.display = 'none';
+        } else {
+            alert("Para instalar la app:\n• Android: Menú del navegador ➔ 'Instalar aplicación'.\n• iPhone: Compartir ➔ 'Agregar a inicio'.");
+        }
+    });
+
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZg9ylgmq-nTDmmRfc4HbDCTEn0JtP-3oWLs0Jj_6ukxEra1STeMDiVKSR8t6NWs1d/exec";
+
+    const PRECIOS = {
+        'Fútbol 5': 40000,
+        'Fútbol 9': 100000,
+        'Pádel': 40000
+    };
+
+    let reserva = { deporte: "", nombre: "", celular: "", fecha: "", hora: "", monto: 0 };
+    let reservasOcupadas = [];
+
+    function formatearFechaDDMMYYYY(fechaStr) {
+        if (!fechaStr) return "";
+        let partes = fechaStr.split('T')[0].split('-');
+        if (partes.length === 3) {
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+        return fechaStr;
+    }
+
+    function changeStep(stepNumber) {
+        document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+        if(stepNumber === 'admin') {
+            document.getElementById(`step-admin`).classList.add('active');
+            document.getElementById('main-container').style.maxWidth = "600px";
+        } else {
+            document.getElementById(`step-${stepNumber}`).classList.add('active');
+            document.getElementById('main-container').style.maxWidth = "480px";
+        }
+    }
+
+    function selectSport(deporte) {
+        reserva.deporte = deporte;
+        reserva.monto = PRECIOS[deporte];
+        changeStep(2);
+    }
+
+    function validateStep2() {
+        reserva.nombre = document.getElementById('nombre').value.trim();
+        reserva.celular = document.getElementById('celular').value.trim();
+        
+        if(!reserva.nombre || !reserva.celular) {
+            alert('Por favor completá tu nombre y celular.');
+            return;
+        }
+
+        let celularLimpiado = reserva.celular.replace(/\D/g, '');
+        if (celularLimpiado.length !== 10) {
+            alert('Por favor ingresá un número de celular válido de 10 dígitos (Ej: 2364123456).');
+            return;
+        }
+
+        reserva.celular = celularLimpiado;
+        document.getElementById('fecha').min = new Date().toISOString().split('T')[0];
+        changeStep(3);
+    }
+
+    function obtenerHorarios(deporte) {
+        let horarios = [];
+        if (deporte === 'Pádel') {
+            let minutosTotal = 9 * 60; 
+            let finJornada = 23 * 60;  
+            while (minutosTotal <= finJornada) {
+                let h = Math.floor(minutosTotal / 60);
+                let m = minutosTotal % 60;
+                horarios.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+                minutosTotal += 90; 
+            }
+        } else {
+            for (let h = 9; h <= 23; h++) {
+                horarios.push(`${String(h).padStart(2, '0')}:00`);
+            }
+        }
+        return horarios;
+    }
+
+    async function cargarHorariosDisponibles() {
+        const fechaInput = document.getElementById('fecha').value;
+        if (!fechaInput) return;
+
+        reserva.fecha = fechaInput; 
+        const container = document.getElementById('horarios-container');
+        const loader = document.getElementById('loading-horarios');
+        
+        container.innerHTML = "";
+        loader.style.display = "block";
+
+        try {
+            let response = await fetch(APPS_SCRIPT_URL);
+            reservasOcupadas = await response.json();
+        } catch (error) {
+            reservasOcupadas = [];
+        }
+
+        loader.style.display = "none";
+        const horasPosibles = obtenerHorarios(reserva.deporte);
+
+        horasPosibles.forEach(hora => {
+            let ocupado = chequearDisponibilidad(reserva.deporte, reserva.fecha, hora);
+            let btn = document.createElement('button');
+            btn.className = ocupado ? "time-btn booked" : "time-btn";
+            btn.innerText = hora + (ocupado ? " (Ocupado)" : "");
+            
+            if (!ocupado) {
+                btn.onclick = () => realizarReserva(hora);
+            }
+            container.appendChild(btn);
+        });
+    }
+
+    function chequearDisponibilidad(deporte, fechaInput, hora) {
+        let fechaBusqueda = formatearFechaDDMMYYYY(fechaInput); 
+        let targetHora = String(hora).substring(0, 5).trim();
+        
+        let matchFechaHora = reservasOcupadas.filter(r => {
+            if (!r.fecha || !r.hora) return false;
+            let fSheet = String(r.fecha).replace(/'/, '').trim();
+            let hSheet = String(r.hora).replace(/'/, '').substring(0, 5).trim();
+            let estadoValido = String(r.estado || "Reservado").trim().toLowerCase() === "reservado";
+            return fSheet === fechaBusqueda && hSheet === targetHora && estadoValido;
+        });
+
+        let hayFutbol9 = matchFechaHora.some(r => String(r.deporte).toLowerCase().includes('futbol 9'));
+        let cantFutbol5 = matchFechaHora.filter(r => String(r.deporte).toLowerCase().includes('futbol 5')).length;
+        let cantPadel = matchFechaHora.filter(r => String(r.deporte).toLowerCase().includes('padel')).length;
+
+        if (deporte === 'Fútbol 9') return hayFutbol9 || cantFutbol5 > 0;
+        if (deporte === 'Fútbol 5') return hayFutbol9 || cantFutbol5 >= 3;
+        if (deporte === 'Pádel') return cantPadel >= 2;
+        return false;
+    }
+
+    async function realizarReserva(hora) {
+        reserva.hora = hora;
+        let precioFormateado = reserva.monto.toLocaleString('es-AR');
+        let fechaLegible = formatearFechaDDMMYYYY(reserva.fecha);
+        
+        if(!confirm(`¿Confirmar reserva para ${reserva.deporte} el día ${fechaLegible} a las ${reserva.hora}?\nTotal: $${precioFormateado}`)) {
+            return;
+        }
+
+        const container = document.getElementById('horarios-container');
+        container.innerHTML = "<div class='loading'>Guardando reserva en el sistema...</div>";
+
+        let datosReserva = {
+            fecha: reserva.fecha,
+            hora: reserva.hora,
+            deporte: reserva.deporte,
+            nombre: reserva.nombre,
+            celular: reserva.celular,
+            estado: "Reservado",
+            monto: reserva.monto
+        };
+
+        try {
+            let response = await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(datosReserva)
+            });
+            let resultado = await response.json();
+
+            if (resultado.status === "success") {
+                document.getElementById('precio-info').innerText = `Precio total: $${precioFormateado}`;
+                changeStep(4);
+
+                setTimeout(function() {
+                    let mensajeWhatsApp = `¡Hola! Acabo de reservar ${reserva.deporte} para el día ${fechaLegible} a las ${reserva.hora}. Monto total: $${precioFormateado}. Mi nombre es ${reserva.nombre}.`;
+                    window.location.href = `https://wa.me/5492364351535?text=${encodeURIComponent(mensajeWhatsApp)}`;
+                }, 3500);
+            } else {
+                alert("Error: " + (resultado.message || "No se pudo completar"));
+                cargarHorariosDisponibles();
+            }
+        } catch (e) {
+            alert("Error de conexión con el servidor.");
+            cargarHorariosDisponibles();
+        }
+    }
+
+    // --- FUNCIONES DEL ADMINISTRADOR ---
+    function accesoAdministrador() {
+        let pin = prompt("Ingrese la contraseña de Administrador:");
+        if (pin === "yahora??") { // Podés cambiar "1234" por la clave que quieras
+            changeStep('admin');
+            cargarPanelAdmin();
+        } else if (pin !== null) {
+            alert("Contraseña incorrecta.");
+        }
+    }
+
+    async function cargarPanelAdmin() {
+        const contenedorLista = document.getElementById('admin-lista-turnos');
+        const spanRecaudacion = document.getElementById('admin-recaudacion');
+        contenedorLista.innerHTML = "<div class='loading'>Cargando turnos desde Google Sheets...</div>";
+
+        try {
+            let response = await fetch(APPS_SCRIPT_URL);
+            let turnos = await response.json();
+
+            contenedorLista.innerHTML = "";
+            let totalActivo = 0;
+
+            if (turnos.length === 0) {
+                contenedorLista.innerHTML = "<p style='text-align:center; color:#666;'>No hay turnos registrados.</p>";
+                spanRecaudacion.innerText = "$0";
+                return;
+            }
+
+            turnos.reverse().forEach(t => {
+                let esReservado = String(t.estado || "Reservado").trim().toLowerCase() === "reservado";
+                let montoNum = Number(t.monto) || 0;
+
+                if (esReservado) {
+                    totalActivo += montoNum;
+                }
+
+                let div = document.createElement('div');
+                div.className = esReservado ? "reserva-item" : "reserva-item cancelado";
+                div.innerHTML = `
+                    <b>${t.deporte}</b> - ${t.fecha} a las ${t.hora}hs<br>
+                    👤 <b>${t.nombre}</b> (${t.celular})<br>
+                    💰 <b>$${montoNum.toLocaleString('es-AR')}</b> | Estado: <i>${t.estado}</i>
+                    ${esReservado ? `<br><button class="btn-cancel-admin" onclick="cancelarTurnoAdmin('${t.fecha}', '${t.hora}', '${t.deporte}')">❌ Cancelar Turno</button>` : ''}
+                `;
+                contenedorLista.appendChild(div);
+            });
+
+            spanRecaudacion.innerText = "$" + totalActivo.toLocaleString('es-AR');
+
+        } catch (error) {
+            contenedorLista.innerHTML = "<p style='color: red; text-align: center;'>Error al cargar los datos.</p>";
+        }
+    }
+
+    async function cancelarTurnoAdmin(fecha, hora, deporte) {
+        if (!confirm(`¿Estás seguro de cancelar el turno de ${deporte} del ${fecha} a las ${hora}hs?\nEsto liberará el horario y descontará el monto de la caja.`)) {
+            return;
+        }
+
+        const contenedorLista = document.getElementById('admin-lista-turnos');
+        contenedorLista.innerHTML = "<div class='loading'>Actualizando planilla...</div>";
+
+        try {
+            let response = await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    accion: "cancelar",
+                    fecha: fecha,
+                    hora: hora,
+                    deporte: deporte
+                })
+            });
+            let resultado = await response.json();
+
+            if (resultado.status === "success") {
+                alert("Turno cancelado con éxito.");
+                cargarPanelAdmin();
+            } else {
+                alert("No se pudo cancelar el turno.");
+                cargarPanelAdmin();
+            }
+        } catch (e) {
+            alert("Error de conexión.");
+            cargarPanelAdmin();
+        }
+    }
+</script>
+
+</body>
+</html>
