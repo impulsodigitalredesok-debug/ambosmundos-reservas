@@ -198,12 +198,12 @@
             text-decoration: underline;
         }
 
-        /* Estilos Panel Admin con Tarjetas de Caja */
+        /* Estilos Panel Admin con Selector de Meses */
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .stat-box {
             padding: 12px;
@@ -229,12 +229,45 @@
         .stat-box.cobrado h4 { color: #2e7d32; }
 
         .stat-box .amount {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: bold;
             margin: 0;
         }
         .stat-box.pendiente .amount { color: #ef6c00; }
         .stat-box.cobrado .amount { color: #2e7d32; }
+
+        .concesion-box {
+            background: #e0f2f1;
+            border: 1px solid var(--accent-color);
+            padding: 14px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .concesion-box h4 {
+            margin: 0 0 4px 0;
+            color: var(--primary-color);
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+        .concesion-box .amount {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .filter-container {
+            background: #f1f8e9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #c8e6c9;
+        }
+        .filter-container label {
+            font-size: 13px;
+            color: var(--success-color);
+        }
 
         .reserva-item {
             background: #f9f9f9;
@@ -363,14 +396,28 @@
     <div id="step-admin" class="step">
         <h3 style="color: var(--primary-color);">Panel de Administración 🛠️</h3>
         
-        <!-- Tarjetas de Control de Caja (Pendiente vs Cobrado) -->
+        <!-- Filtro por Mes para Concesión -->
+        <div class="filter-container">
+            <label for="filtro-mes">📅 Seleccionar Mes para Liquidación de Concesión:</label>
+            <select id="filtro-mes" onchange="actualizarCalculosAdmin()">
+                <!-- Se llena dinámicamente -->
+            </select>
+        </div>
+
+        <!-- Tarjeta especial para la Concesión del Mes Seleccionado -->
+        <div class="concesion-box">
+            <h4>Total Cobrado en el Mes (Para el Club)</h4>
+            <div class="amount" id="admin-concesion-mes">$0</div>
+        </div>
+
+        <!-- Tarjetas Generales -->
         <div class="stats-grid">
             <div class="stat-box pendiente">
-                <h4>⏳ Pendiente de Cobrar</h4>
+                <h4>⏳ Pendiente Global</h4>
                 <div class="amount" id="admin-pendiente">$0</div>
             </div>
             <div class="stat-box cobrado">
-                <h4>✅ Ya Cobrado / Jugado</h4>
+                <h4>✅ Histórico Jugado</h4>
                 <div class="amount" id="admin-cobrado">$0</div>
             </div>
         </div>
@@ -379,8 +426,8 @@
             <button class="action-btn" style="padding: 10px; font-size: 14px;" onclick="cargarPanelAdmin()">🔄 Actualizar Lista</button>
         </div>
 
-        <h4 style="margin-bottom: 5px;">Próximos Turnos a Jugarse:</h4>
-        <div id="admin-lista-turnos" style="max-height: 320px; overflow-y: auto; margin-bottom: 15px;">
+        <h4 style="margin-bottom: 5px;">Listado de Turnos Registrados:</h4>
+        <div id="admin-lista-turnos" style="max-height: 280px; overflow-y: auto; margin-bottom: 15px;">
             <div class="loading">Cargando turnos desde Google Sheets...</div>
         </div>
 
@@ -419,6 +466,7 @@
 
     let reserva = { deporte: "", nombre: "", celular: "", fecha: "", hora: "", monto: 0 };
     let reservasOcupadas = [];
+    let cacheTurnosGlobal = [];
 
     function formatearFechaDDMMYYYY(fechaStr) {
         if (!fechaStr) return "";
@@ -586,7 +634,6 @@
                     let mensajeWhatsApp = `¡Hola! Acabo de reservar ${reserva.deporte} para el día ${fechaLegible} a las ${reserva.hora}. Monto total: $${precioFormateado}. Mi nombre es ${reserva.nombre}.`;
                     window.location.href = `https://wa.me/5492364351535?text=${encodeURIComponent(mensajeWhatsApp)}`;
                     
-                    // REINICIAR APP AL PASO 1 DESPUÉS DE SALIR A WHATSAPP
                     setTimeout(() => {
                         resetFormulario();
                         changeStep(1);
@@ -602,7 +649,7 @@
         }
     }
 
-    // --- FUNCIONES Y LÓGICA DEL PANEL DE ADMINISTRACIÓN ---
+    // --- PANEL DE ADMINISTRACIÓN Y CÁLCULO DE CONCESIÓN POR MES ---
     function accesoAdministrador() {
         let pin = prompt("Ingrese la contraseña de Administrador:");
         if (pin === "y ahora???") {
@@ -626,91 +673,156 @@
 
     async function cargarPanelAdmin() {
         const contenedorLista = document.getElementById('admin-lista-turnos');
-        const spanPendiente = document.getElementById('admin-pendiente');
-        const spanCobrado = document.getElementById('admin-cobrado');
         contenedorLista.innerHTML = "<div class='loading'>Cargando turnos desde Google Sheets...</div>";
 
         try {
             let response = await fetch(APPS_SCRIPT_URL);
-            let turnos = await response.json();
+            cacheTurnosGlobal = await response.json();
 
-            contenedorLista.innerHTML = "";
-            let totalPendiente = 0;
-            let totalCobrado = 0;
-            const ahora = new Date();
-
-            if (turnos.length === 0) {
+            if (cacheTurnosGlobal.length === 0) {
                 contenedorLista.innerHTML = "<p style='text-align:center; color:#666;'>No hay turnos registrados.</p>";
-                spanPendiente.innerText = "$0";
-                spanCobrado.innerText = "$0";
+                document.getElementById('admin-pendiente').innerText = "$0";
+                document.getElementById('admin-cobrado').innerText = "$0";
+                document.getElementById('admin-concesion-mes').innerText = "$0";
+                document.getElementById('filtro-mes').innerHTML = "<option>Sin meses</option>";
                 return;
             }
 
-            // ORDENAR CRONOLÓGICAMENTE: Próximos turnos primero
-            turnos.sort((a, b) => {
-                let fechaA = parsearFechaHoraObjeto(a.fecha, a.hora);
-                let fechaB = parsearFechaHoraObjeto(b.fecha, b.hora);
-                
-                let aEsFuturo = fechaA >= ahora;
-                let bEsFuturo = fechaB >= ahora;
-
-                // Futuros arriba, pasados abajo
-                if (aEsFuturo && !bEsFuturo) return -1;
-                if (!aEsFuturo && bEsFuturo) return 1;
-
-                // Si ambos son futuros, ordenar del más cercano al más lejano
-                if (aEsFuturo && bEsFuturo) return fechaA - fechaB;
-                
-                // Si ambos ya pasaron, ordenar del más reciente al más antiguo
-                return fechaB - fechaA;
-            });
-
-            turnos.forEach(t => {
-                let esReservado = String(t.estado || "Reservado").trim().toLowerCase() === "reservado";
-                let montoNum = Number(t.monto) || 0;
-                let fechaObjeto = parsearFechaHoraObjeto(t.fecha, t.hora);
-                let esFuturo = fechaObjeto >= ahora;
-
-                let claseEstilo = "reserva-item";
-                let badge = "";
-
-                if (!esReservado) {
-                    claseEstilo = "reserva-item cancelado";
-                    badge = `<span class="badge-estado badge-cancelado">Cancelado</span>`;
-                } else if (esFuturo) {
-                    totalPendiente += montoNum;
-                    badge = `<span class="badge-estado badge-pendiente">⏳ Pendiente</span>`;
-                } else {
-                    totalCobrado += montoNum;
-                    claseEstilo = "reserva-item pasado";
-                    badge = `<span class="badge-estado badge-cobrado">✅ Jugado / Cobrado</span>`;
-                }
-
-                let div = document.createElement('div');
-                div.className = claseEstilo;
-                div.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                        <b>${t.deporte}</b>
-                        ${badge}
-                    </div>
-                    📅 <b>${t.fecha}</b> a las <b>${t.hora}hs</b><br>
-                    👤 <b>${t.nombre}</b> (${t.celular})<br>
-                    💰 <b>$${montoNum.toLocaleString('es-AR')}</b>
-                    ${(esReservado && esFuturo) ? `<br><button class="btn-cancel-admin" onclick="cancelarTurnoAdmin('${t.fecha}', '${t.hora}', '${t.deporte}')">❌ Cancelar Turno</button>` : ''}
-                `;
-                contenedorLista.appendChild(div);
-            });
-
-            spanPendiente.innerText = "$" + totalPendiente.toLocaleString('es-AR');
-            spanCobrado.innerText = "$" + totalCobrado.toLocaleString('es-AR');
+            poblarSelectorMeses(cacheTurnosGlobal);
+            actualizarCalculosAdmin();
 
         } catch (error) {
             contenedorLista.innerHTML = "<p style='color: red; text-align: center;'>Error al cargar los datos.</p>";
         }
     }
 
+    function poblarSelectorMeses(turnos) {
+        const selectMes = document.getElementById('filtro-mes');
+        let mesesDisponibles = new Set();
+
+        turnos.forEach(t => {
+            let fObj = parsearFechaHoraObjeto(t.fecha, t.hora);
+            if (fObj.getTime() !== 0) {
+                let anio = fObj.getFullYear();
+                let mes = String(fObj.getMonth() + 1).padStart(2, '0');
+                mesesDisponibles.add(`${anio}-${mes}`);
+            }
+        });
+
+        let mesesOrdenados = Array.from(mesesDisponibles).sort().reverse();
+        let mesActualStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+
+        selectMes.innerHTML = "";
+        mesesOrdenados.forEach(m => {
+            let [anio, mesNum] = m.split('-');
+            let nombreMes = obtenerNombreMes(mesNum) + " " + anio;
+            let opt = document.createElement('option');
+            opt.value = m;
+            opt.innerText = nombreMes;
+            if (m === mesActualStr) {
+                opt.selected = true;
+            }
+            selectMes.appendChild(opt);
+        });
+
+        // Si el mes actual no tiene turnos pero la lista no está vacía, selecciona el primero disponible
+        if (!selectMes.value && mesesOrdenados.length > 0) {
+            selectMes.value = mesesOrdenados[0];
+        }
+    }
+
+    function obtenerNombreMes(numStr) {
+        const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        return meses[parseInt(numStr, 10) - 1] || numStr;
+    }
+
+    function actualizarCalculosAdmin() {
+        const contenedorLista = document.getElementById('admin-lista-turnos');
+        const spanPendiente = document.getElementById('admin-pendiente');
+        const spanCobrado = document.getElementById('admin-cobrado');
+        const spanConcesionMes = document.getElementById('admin-concesion-mes');
+        const mesSeleccionado = document.getElementById('filtro-mes').value; // Formato: "AAAA-MM"
+
+        contenedorLista.innerHTML = "";
+        let totalPendiente = 0;
+        let totalCobradoHistorial = 0;
+        let totalConcesionMes = 0;
+        const ahora = new Date();
+
+        // Ordenar cronológicamente
+        let turnosOrdenados = [...cacheTurnosGlobal].sort((a, b) => {
+            let fechaA = parsearFechaHoraObjeto(a.fecha, a.hora);
+            let fechaB = parsearFechaHoraObjeto(b.fecha, b.hora);
+            let aEsFuturo = fechaA >= ahora;
+            let bEsFuturo = fechaB >= ahora;
+
+            if (aEsFuturo && !bEsFuturo) return -1;
+            if (!aEsFuturo && bEsFuturo) return 1;
+            if (aEsFuturo && bEsFuturo) return fechaA - fechaB;
+            return fechaB - fechaA;
+        });
+
+        turnosOrdenados.forEach(t => {
+            let esReservado = String(t.estado || "Reservado").trim().toLowerCase() === "reservado";
+            let montoNum = Number(t.monto) || 0;
+            let fechaObjeto = parsearFechaHoraObjeto(t.fecha, t.hora);
+            let esFuturo = fechaObjeto >= ahora;
+
+            // Calcular totales generales
+            if (esReservado) {
+                if (esFuturo) {
+                    totalPendiente += montoNum;
+                } else {
+                    totalCobradoHistorial += montoNum;
+                }
+
+                // Calcular total cobrado para el mes seleccionado de la concesión (turnos YA JUGADOS en ese mes)
+                if (fechaObjeto.getTime() !== 0 && !esFuturo) {
+                    let anio = fechaObjeto.getFullYear();
+                    let mes = String(fechaObjeto.getMonth() + 1).padStart(2, '0');
+                    let mesAnioTurno = `${anio}-${mes}`;
+
+                    if (mesAnioTurno === mesSeleccionado) {
+                        totalConcesionMes += montoNum;
+                    }
+                }
+            }
+
+            let claseEstilo = "reserva-item";
+            let badge = "";
+
+            if (!esReservado) {
+                claseEstilo = "reserva-item cancelado";
+                badge = `<span class="badge-estado badge-cancelado">Cancelado</span>`;
+            } else if (esFuturo) {
+                badge = `<span class="badge-estado badge-pendiente">⏳ Pendiente</span>`;
+            } else {
+                claseEstilo = "reserva-item pasado";
+                badge = `<span class="badge-estado badge-cobrado">✅ Jugado / Cobrado</span>`;
+            }
+
+            let div = document.createElement('div');
+            div.className = claseEstilo;
+            div.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <b>${t.deporte}</b>
+                    ${badge}
+                </div>
+                📅 <b>${t.fecha}</b> a las <b>${t.hora}hs</b><br>
+                👤 <b>${t.nombre}</b> (${t.celular})<br>
+                💰 <b>$${montoNum.toLocaleString('es-AR')}</b>
+                ${(esReservado && esFuturo) ? `<br><button class="btn-cancel-admin" onclick="cancelarTurnoAdmin('${t.fecha}', '${t.hora}', '${t.deporte}')">❌ Cancelar Turno</button>` : ''}
+            `;
+            contenedorLista.appendChild(div);
+        });
+
+        spanPendiente.innerText = "$" + totalPendiente.toLocaleString('es-AR');
+        spanCobrado.innerText = "$" + totalCobradoHistorial.toLocaleString('es-AR');
+        spanConcesionMes.innerText = "$" + totalConcesionMes.toLocaleString('es-AR');
+    }
+
     async function cancelarTurnoAdmin(fecha, hora, deporte) {
-        if (!confirm(`¿Estás seguro de cancelar el turno de ${deporte} del ${fecha} a las ${hora}hs?\nEsto liberará el horario y restará el dinero de los pendientes.`)) {
+        if (!confirm(`¿Estás seguro de cancelar el turno de ${deporte} del ${fecha} a las ${hora}hs?\nEsto liberará el horario y restará el dinero.`)) {
             return;
         }
 
