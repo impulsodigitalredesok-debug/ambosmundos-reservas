@@ -140,22 +140,24 @@
 
         input, select {
             width: 100%;
-            padding: 12px;
-            margin: 8px 0 16px 0;
+            padding: 10px;
+            margin: 4px 0 10px 0;
             border: 1px solid #ccc;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 14px;
             box-sizing: border-box;
         }
 
         label {
             font-weight: 600;
             color: var(--text-color);
+            font-size: 12px;
         }
 
         .action-btn {
             background-color: var(--primary-color);
             color: white;
+            padding: 12px;
         }
 
         .action-btn:hover {
@@ -198,120 +200,70 @@
             text-decoration: underline;
         }
 
-        /* Estilos Panel Admin con Selector de Meses */
+        /* Estilos Panel Admin Avanzado */
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 10px;
+            margin-bottom: 10px;
         }
         .stat-box {
-            padding: 12px;
-            border-radius: 10px;
+            padding: 10px;
+            border-radius: 8px;
             text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
         }
-        .stat-box.pendiente {
-            background: #fff3e0;
-            border: 1px solid #ffe0b2;
-        }
-        .stat-box.cobrado {
-            background: #e8f5e9;
-            border: 1px solid #c8e6c9;
-        }
-        .stat-box h4 {
-            margin: 0 0 6px 0;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+        .stat-box.pendiente { background: #fff3e0; border: 1px solid #ffe0b2; }
+        .stat-box.cobrado { background: #e8f5e9; border: 1px solid #c8e6c9; }
+        .stat-box h4 { margin: 0 0 4px 0; font-size: 11px; text-transform: uppercase; }
         .stat-box.pendiente h4 { color: #e65100; }
         .stat-box.cobrado h4 { color: #2e7d32; }
-
-        .stat-box .amount {
-            font-size: 17px;
-            font-weight: bold;
-            margin: 0;
-        }
+        .stat-box .amount { font-size: 16px; font-weight: bold; margin: 0; }
         .stat-box.pendiente .amount { color: #ef6c00; }
         .stat-box.cobrado .amount { color: #2e7d32; }
 
         .concesion-box {
             background: #e0f2f1;
             border: 1px solid var(--accent-color);
-            padding: 14px;
-            border-radius: 10px;
-            text-align: center;
-            margin-bottom: 15px;
-        }
-        .concesion-box h4 {
-            margin: 0 0 4px 0;
-            color: var(--primary-color);
-            font-size: 13px;
-            text-transform: uppercase;
-        }
-        .concesion-box .amount {
-            font-size: 20px;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin: 0;
-        }
-
-        .filter-container {
-            background: #f1f8e9;
-            padding: 12px;
+            padding: 10px;
             border-radius: 8px;
-            margin-bottom: 15px;
-            border: 1px solid #c8e6c9;
+            text-align: center;
+            margin-bottom: 10px;
         }
-        .filter-container label {
-            font-size: 13px;
-            color: var(--success-color);
+        .concesion-box h4 { margin: 0 0 2px 0; color: var(--primary-color); font-size: 12px; text-transform: uppercase; }
+        .concesion-box .amount { font-size: 18px; font-weight: bold; color: var(--primary-color); margin: 0; }
+
+        .filters-box {
+            background: #f1f8e9;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #c8e6c9;
         }
 
         .reserva-item {
             background: #f9f9f9;
-            padding: 12px;
+            padding: 10px;
             border-radius: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             border-left: 5px solid var(--accent-color);
-            font-size: 14px;
+            font-size: 13px;
         }
-        .reserva-item.pasado {
-            border-left-color: #9e9e9e;
-            background: #f0f0f0;
-        }
-        .reserva-item.cancelado {
-            border-left-color: var(--danger-color);
-            opacity: 0.6;
-            text-decoration: line-through;
-        }
+        .reserva-item.pasado { border-left-color: #9e9e9e; background: #f0f0f0; }
+        .reserva-item.cancelado { border-left-color: var(--danger-color); opacity: 0.6; text-decoration: line-through; }
         .btn-cancel-admin {
             background-color: var(--danger-color);
             color: white;
             border: none;
-            padding: 6px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-top: 6px;
-        }
-
-        .loading {
-            text-align: center;
-            font-style: italic;
-            color: #666;
-            margin: 10px 0;
-        }
-
-        .badge-estado {
-            display: inline-block;
-            padding: 2px 6px;
+            padding: 4px 8px;
             border-radius: 4px;
+            cursor: pointer;
             font-size: 11px;
-            font-weight: bold;
-            text-transform: uppercase;
+            margin-top: 4px;
         }
+
+        .loading { text-align: center; font-style: italic; color: #666; margin: 10px 0; }
+        .badge-estado { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
         .badge-pendiente { background: #ffe0b2; color: #e65100; }
         .badge-cobrado { background: #c8e6c9; color: #2e7d32; }
         .badge-cancelado { background: #ffcdd2; color: #c62828; }
@@ -394,23 +346,15 @@
 
     <!-- PANEL DE ADMINISTRACIÓN -->
     <div id="step-admin" class="step">
-        <h3 style="color: var(--primary-color);">Panel de Administración 🛠️</h3>
+        <h3 style="color: var(--primary-color); margin-bottom: 8px;">Panel de Administración 🛠️</h3>
         
-        <!-- Filtro por Mes para Concesión -->
-        <div class="filter-container">
-            <label for="filtro-mes">📅 Seleccionar Mes para Liquidación de Concesión:</label>
-            <select id="filtro-mes" onchange="actualizarCalculosAdmin()">
-                <!-- Se llena dinámicamente -->
-            </select>
-        </div>
-
-        <!-- Tarjeta especial para la Concesión del Mes Seleccionado -->
+        <!-- Concesión del Mes -->
         <div class="concesion-box">
-            <h4>Total Cobrado en el Mes (Para el Club)</h4>
+            <h4 id="label-concesion-titulo">Total Concesión del Mes</h4>
             <div class="amount" id="admin-concesion-mes">$0</div>
         </div>
 
-        <!-- Tarjetas Generales -->
+        <!-- Totales Generales -->
         <div class="stats-grid">
             <div class="stat-box pendiente">
                 <h4>⏳ Pendiente Global</h4>
@@ -422,16 +366,53 @@
             </div>
         </div>
 
-        <div style="margin-bottom: 15px;">
-            <button class="action-btn" style="padding: 10px; font-size: 14px;" onclick="cargarPanelAdmin()">🔄 Actualizar Lista</button>
+        <!-- FILTROS AVANZADOS (Deporte, Rango de Fechas y Buscador) -->
+        <div class="filters-box">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div>
+                    <label for="filtro-mes-concesion">📅 Mes Concesión:</label>
+                    <select id="filtro-mes-concesion" onchange="actualizarCalculosAdmin()"></select>
+                </div>
+                <div>
+                    <label for="filtro-deporte">⚽ Deporte:</label>
+                    <select id="filtro-deporte" onchange="actualizarCalculosAdmin()">
+                        <option value="TODOS">Todos los deportes</option>
+                        <option value="Fútbol 5">Fútbol 5</option>
+                        <option value="Fútbol 9">Fútbol 9</option>
+                        <option value="Pádel">Pádel</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;">
+                <div>
+                    <label for="filtro-desde">📅 Desde fecha:</label>
+                    <input type="date" id="filtro-desde" onchange="actualizarCalculosAdmin()">
+                </div>
+                <div>
+                    <label for="filtro-hasta">📅 Hasta fecha:</label>
+                    <input type="date" id="filtro-hasta" onchange="actualizarCalculosAdmin()">
+                </div>
+            </div>
+
+            <div style="margin-top: 4px;">
+                <label for="buscador-nombre">🔍 Buscar Jugador o Celular:</label>
+                <input type="text" id="buscador-nombre" placeholder="Nombre o celular..." oninput="actualizarCalculosAdmin()">
+            </div>
+
+            <button class="action-btn" style="padding: 6px; font-size: 12px; margin-top: 6px; background-color: #78909c;" onclick="limpiarFiltrosFechas()">🔄 Limpiar Fechas / Filtros</button>
         </div>
 
-        <h4 style="margin-bottom: 5px;">Listado de Turnos Registrados:</h4>
-        <div id="admin-lista-turnos" style="max-height: 280px; overflow-y: auto; margin-bottom: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <h4 style="margin: 0; font-size: 13px;">Listado de Turnos:</h4>
+            <button class="action-btn" style="width: auto; padding: 5px 10px; margin: 0; font-size: 11px;" onclick="cargarPanelAdmin()">🔄 Actualizar</button>
+        </div>
+
+        <div id="admin-lista-turnos" style="max-height: 220px; overflow-y: auto; margin-bottom: 12px;">
             <div class="loading">Cargando turnos desde Google Sheets...</div>
         </div>
 
-        <button class="action-btn" style="background-color: #78909c;" onclick="changeStep(1)">Cerrar Panel Admin</button>
+        <button class="action-btn" style="background-color: #78909c; padding: 10px;" onclick="changeStep(1)">Cerrar Panel Admin</button>
     </div>
 </div>
 
@@ -456,6 +437,7 @@
         }
     });
 
+    // URL CORRECTA FIJA
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZg9ylgmq-nTDmmRfc4HbDCTEn0JtP-3oWLs0Jj_6ukxEra1STeMDiVKSR8t6NWs1d/exec";
 
     const PRECIOS = {
@@ -649,7 +631,7 @@
         }
     }
 
-    // --- PANEL DE ADMINISTRACIÓN Y CÁLCULO DE CONCESIÓN POR MES ---
+    // --- PANEL DE ADMINISTRACIÓN ---
     function accesoAdministrador() {
         let pin = prompt("Ingrese la contraseña de Administrador:");
         if (pin === "y ahora???") {
@@ -684,7 +666,7 @@
                 document.getElementById('admin-pendiente').innerText = "$0";
                 document.getElementById('admin-cobrado').innerText = "$0";
                 document.getElementById('admin-concesion-mes').innerText = "$0";
-                document.getElementById('filtro-mes').innerHTML = "<option>Sin meses</option>";
+                document.getElementById('filtro-mes-concesion').innerHTML = "<option>Sin meses</option>";
                 return;
             }
 
@@ -697,7 +679,7 @@
     }
 
     function poblarSelectorMeses(turnos) {
-        const selectMes = document.getElementById('filtro-mes');
+        const selectMes = document.getElementById('filtro-mes-concesion');
         let mesesDisponibles = new Set();
 
         turnos.forEach(t => {
@@ -711,6 +693,7 @@
 
         let mesesOrdenados = Array.from(mesesDisponibles).sort().reverse();
         let mesActualStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+        let valorPrevio = selectMes.value;
 
         selectMes.innerHTML = "";
         mesesOrdenados.forEach(m => {
@@ -719,14 +702,14 @@
             let opt = document.createElement('option');
             opt.value = m;
             opt.innerText = nombreMes;
-            if (m === mesActualStr) {
-                opt.selected = true;
-            }
             selectMes.appendChild(opt);
         });
 
-        // Si el mes actual no tiene turnos pero la lista no está vacía, selecciona el primero disponible
-        if (!selectMes.value && mesesOrdenados.length > 0) {
+        if (valorPrevio && mesesOrdenados.includes(valorPrevio)) {
+            selectMes.value = valorPrevio;
+        } else if (mesesOrdenados.includes(mesActualStr)) {
+            selectMes.value = mesActualStr;
+        } else if (mesesOrdenados.length > 0) {
             selectMes.value = mesesOrdenados[0];
         }
     }
@@ -736,12 +719,31 @@
         return meses[parseInt(numStr, 10) - 1] || numStr;
     }
 
+    function limpiarFiltrosFechas() {
+        document.getElementById('filtro-desde').value = "";
+        document.getElementById('filtro-hasta').value = "";
+        document.getElementById('buscador-nombre').value = "";
+        document.getElementById('filtro-deporte').value = "TODOS";
+        actualizarCalculosAdmin();
+    }
+
     function actualizarCalculosAdmin() {
         const contenedorLista = document.getElementById('admin-lista-turnos');
         const spanPendiente = document.getElementById('admin-pendiente');
         const spanCobrado = document.getElementById('admin-cobrado');
         const spanConcesionMes = document.getElementById('admin-concesion-mes');
-        const mesSeleccionado = document.getElementById('filtro-mes').value; // Formato: "AAAA-MM"
+        const labelConcesionTitulo = document.getElementById('label-concesion-titulo');
+        
+        const mesSeleccionado = document.getElementById('filtro-mes-concesion').value;
+        const deporteSeleccionado = document.getElementById('filtro-deporte').value;
+        const fechaDesde = document.getElementById('filtro-desde').value; // Formato YYYY-MM-DD
+        const fechaHasta = document.getElementById('filtro-hasta').value; // Formato YYYY-MM-DD
+        const textoBusqueda = document.getElementById('buscador-nombre').value.toLowerCase().trim();
+
+        if (mesSeleccionado) {
+            let [anio, mesNum] = mesSeleccionado.split('-');
+            labelConcesionTitulo.innerText = `Total Concesión (${obtenerNombreMes(mesNum)} ${anio})`;
+        }
 
         contenedorLista.innerHTML = "";
         let totalPendiente = 0;
@@ -749,7 +751,7 @@
         let totalConcesionMes = 0;
         const ahora = new Date();
 
-        // Ordenar cronológicamente
+        // Orden cronológico: Próximos arriba, pasados abajo
         let turnosOrdenados = [...cacheTurnosGlobal].sort((a, b) => {
             let fechaA = parsearFechaHoraObjeto(a.fecha, a.hora);
             let fechaB = parsearFechaHoraObjeto(b.fecha, b.hora);
@@ -762,13 +764,15 @@
             return fechaB - fechaA;
         });
 
+        let contadorVisibles = 0;
+
         turnosOrdenados.forEach(t => {
             let esReservado = String(t.estado || "Reservado").trim().toLowerCase() === "reservado";
             let montoNum = Number(t.monto) || 0;
             let fechaObjeto = parsearFechaHoraObjeto(t.fecha, t.hora);
             let esFuturo = fechaObjeto >= ahora;
 
-            // Calcular totales generales
+            // Totales globales
             if (esReservado) {
                 if (esFuturo) {
                     totalPendiente += montoNum;
@@ -776,17 +780,43 @@
                     totalCobradoHistorial += montoNum;
                 }
 
-                // Calcular total cobrado para el mes seleccionado de la concesión (turnos YA JUGADOS en ese mes)
+                // Concesión del mes seleccionado (turnos ya jugados)
                 if (fechaObjeto.getTime() !== 0 && !esFuturo) {
                     let anio = fechaObjeto.getFullYear();
                     let mes = String(fechaObjeto.getMonth() + 1).padStart(2, '0');
-                    let mesAnioTurno = `${anio}-${mes}`;
-
-                    if (mesAnioTurno === mesSeleccionado) {
+                    if (`${anio}-${mes}` === mesSeleccionado) {
                         totalConcesionMes += montoNum;
                     }
                 }
             }
+
+            // APLICAR FILTROS (Deporte, Rango de Fechas y Buscador)
+            let deporteTurno = String(t.deporte || "").trim();
+            let nombreTurno = String(t.nombre || "").toLowerCase();
+            let celularTurno = String(t.celular || "").toLowerCase();
+
+            // Filtro Deporte
+            if (deporteSeleccionado !== "TODOS" && !deporteTurno.toLowerCase().includes(deporteSeleccionado.toLowerCase())) {
+                return;
+            }
+
+            // Filtro Rango de Fechas (Desde / Hasta)
+            if (fechaObjeto.getTime() !== 0) {
+                let anioT = fechaObjeto.getFullYear();
+                let mesT = String(fechaObjeto.getMonth() + 1).padStart(2, '0');
+                let diaT = String(fechaObjeto.getDate()).padStart(2, '0');
+                let fechaTurnoStr = `${anioT}-${mesT}-${diaT}`;
+
+                if (fechaDesde && fechaTurnoStr < fechaDesde) return;
+                if (fechaHasta && fechaTurnoStr > fechaHasta) return;
+            }
+
+            // Filtro Buscador Nombre/Celular
+            if (textoBusqueda !== "" && !nombreTurno.includes(textoBusqueda) && !celularTurno.includes(textoBusqueda)) {
+                return;
+            }
+
+            contadorVisibles++;
 
             let claseEstilo = "reserva-item";
             let badge = "";
@@ -804,7 +834,7 @@
             let div = document.createElement('div');
             div.className = claseEstilo;
             div.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
                     <b>${t.deporte}</b>
                     ${badge}
                 </div>
@@ -815,6 +845,10 @@
             `;
             contenedorLista.appendChild(div);
         });
+
+        if (contadorVisibles === 0) {
+            contenedorLista.innerHTML = "<p style='text-align:center; color:#666; font-style: italic;'>No se encontraron turnos con los filtros seleccionados.</p>";
+        }
 
         spanPendiente.innerText = "$" + totalPendiente.toLocaleString('es-AR');
         spanCobrado.innerText = "$" + totalCobradoHistorial.toLocaleString('es-AR');
