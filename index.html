@@ -41,6 +41,7 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             box-sizing: border-box;
             margin: 16px;
+            transition: max-width 0.3s ease;
         }
 
         h2 {
@@ -197,20 +198,44 @@
             text-decoration: underline;
         }
 
-        /* Estilos Panel Admin */
-        .admin-card {
-            background: #fff;
-            max-width: 600px;
+        /* Estilos Panel Admin con Tarjetas de Caja */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
         }
         .stat-box {
-            background: #e0f2f1;
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
             text-align: center;
-            margin-bottom: 20px;
-            border: 1px solid var(--accent-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        .stat-box h3 { margin: 0; color: var(--primary-color); font-size: 22px; }
+        .stat-box.pendiente {
+            background: #fff3e0;
+            border: 1px solid #ffe0b2;
+        }
+        .stat-box.cobrado {
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+        }
+        .stat-box h4 {
+            margin: 0 0 6px 0;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat-box.pendiente h4 { color: #e65100; }
+        .stat-box.cobrado h4 { color: #2e7d32; }
+
+        .stat-box .amount {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .stat-box.pendiente .amount { color: #ef6c00; }
+        .stat-box.cobrado .amount { color: #2e7d32; }
+
         .reserva-item {
             background: #f9f9f9;
             padding: 12px;
@@ -218,6 +243,10 @@
             margin-bottom: 10px;
             border-left: 5px solid var(--accent-color);
             font-size: 14px;
+        }
+        .reserva-item.pasado {
+            border-left-color: #9e9e9e;
+            background: #f0f0f0;
         }
         .reserva-item.cancelado {
             border-left-color: var(--danger-color);
@@ -241,6 +270,18 @@
             color: #666;
             margin: 10px 0;
         }
+
+        .badge-estado {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge-pendiente { background: #ffe0b2; color: #e65100; }
+        .badge-cobrado { background: #c8e6c9; color: #2e7d32; }
+        .badge-cancelado { background: #ffcdd2; color: #c62828; }
     </style>
 </head>
 <body>
@@ -322,18 +363,25 @@
     <div id="step-admin" class="step">
         <h3 style="color: var(--primary-color);">Panel de Administración 🛠️</h3>
         
-        <div class="stat-box">
-            <span>Recaudación Total Activa (Sin Cancelados)</span>
-            <h3 id="admin-recaudacion">$0</h3>
+        <!-- Tarjetas de Control de Caja (Pendiente vs Cobrado) -->
+        <div class="stats-grid">
+            <div class="stat-box pendiente">
+                <h4>⏳ Pendiente de Cobrar</h4>
+                <div class="amount" id="admin-pendiente">$0</div>
+            </div>
+            <div class="stat-box cobrado">
+                <h4>✅ Ya Cobrado / Jugado</h4>
+                <div class="amount" id="admin-cobrado">$0</div>
+            </div>
         </div>
 
         <div style="margin-bottom: 15px;">
             <button class="action-btn" style="padding: 10px; font-size: 14px;" onclick="cargarPanelAdmin()">🔄 Actualizar Lista</button>
         </div>
 
-        <h4 style="margin-bottom: 5px;">Listado de Turnos Registrados:</h4>
+        <h4 style="margin-bottom: 5px;">Próximos Turnos a Jugarse:</h4>
         <div id="admin-lista-turnos" style="max-height: 320px; overflow-y: auto; margin-bottom: 15px;">
-            <div class="loading">Cargando turnos...</div>
+            <div class="loading">Cargando turnos desde Google Sheets...</div>
         </div>
 
         <button class="action-btn" style="background-color: #78909c;" onclick="changeStep(1)">Cerrar Panel Admin</button>
@@ -361,7 +409,7 @@
         }
     });
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZg9ylgmq-nTDmmRfc4HbDCTEn0JtP-3oWLs0Jj_6ukxEra1STeMDiVKSR8t6NWs1d/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxuHD1G4EzznX2foHbUf_GC5-BPv3oY5iMyVqQWvEUnA1Sd84rtkSvsyUC7qfpqMrWP/exec";
 
     const PRECIOS = {
         'Fútbol 5': 40000,
@@ -379,6 +427,14 @@
             return `${partes[2]}/${partes[1]}/${partes[0]}`;
         }
         return fechaStr;
+    }
+
+    function resetFormulario() {
+        reserva = { deporte: "", nombre: "", celular: "", fecha: "", hora: "", monto: 0 };
+        document.getElementById('nombre').value = "";
+        document.getElementById('celular').value = "";
+        document.getElementById('fecha').value = "";
+        document.getElementById('horarios-container').innerHTML = "";
     }
 
     function changeStep(stepNumber) {
@@ -529,7 +585,13 @@
                 setTimeout(function() {
                     let mensajeWhatsApp = `¡Hola! Acabo de reservar ${reserva.deporte} para el día ${fechaLegible} a las ${reserva.hora}. Monto total: $${precioFormateado}. Mi nombre es ${reserva.nombre}.`;
                     window.location.href = `https://wa.me/5492364351535?text=${encodeURIComponent(mensajeWhatsApp)}`;
-                }, 3500);
+                    
+                    // REINICIAR APP AL PASO 1 DESPUÉS DE SALIR A WHATSAPP
+                    setTimeout(() => {
+                        resetFormulario();
+                        changeStep(1);
+                    }, 1000);
+                }, 3000);
             } else {
                 alert("Error: " + (resultado.message || "No se pudo completar"));
                 cargarHorariosDisponibles();
@@ -540,10 +602,10 @@
         }
     }
 
-    // --- FUNCIONES DEL ADMINISTRADOR ---
+    // --- FUNCIONES Y LÓGICA DEL PANEL DE ADMINISTRACIÓN ---
     function accesoAdministrador() {
         let pin = prompt("Ingrese la contraseña de Administrador:");
-        if (pin === "yahora??") { // Podés cambiar "1234" por la clave que quieras
+        if (pin === "1234") {
             changeStep('admin');
             cargarPanelAdmin();
         } else if (pin !== null) {
@@ -551,9 +613,21 @@
         }
     }
 
+    function parsearFechaHoraObjeto(fStr, hStr) {
+        let fLimpia = String(fStr).replace(/'/, '').trim();
+        let hLimpia = String(hStr).replace(/'/, '').trim();
+        let partes = fLimpia.split('/');
+        if (partes.length === 3) {
+            let [h, m] = hLimpia.split(':');
+            return new Date(partes[2], partes[1] - 1, partes[0], h || 0, m || 0);
+        }
+        return new Date(0);
+    }
+
     async function cargarPanelAdmin() {
         const contenedorLista = document.getElementById('admin-lista-turnos');
-        const spanRecaudacion = document.getElementById('admin-recaudacion');
+        const spanPendiente = document.getElementById('admin-pendiente');
+        const spanCobrado = document.getElementById('admin-cobrado');
         contenedorLista.innerHTML = "<div class='loading'>Cargando turnos desde Google Sheets...</div>";
 
         try {
@@ -561,34 +635,74 @@
             let turnos = await response.json();
 
             contenedorLista.innerHTML = "";
-            let totalActivo = 0;
+            let totalPendiente = 0;
+            let totalCobrado = 0;
+            const ahora = new Date();
 
             if (turnos.length === 0) {
                 contenedorLista.innerHTML = "<p style='text-align:center; color:#666;'>No hay turnos registrados.</p>";
-                spanRecaudacion.innerText = "$0";
+                spanPendiente.innerText = "$0";
+                spanCobrado.innerText = "$0";
                 return;
             }
 
-            turnos.reverse().forEach(t => {
+            // ORDENAR CRONOLÓGICAMENTE: Próximos turnos primero
+            turnos.sort((a, b) => {
+                let fechaA = parsearFechaHoraObjeto(a.fecha, a.hora);
+                let fechaB = parsearFechaHoraObjeto(b.fecha, b.hora);
+                
+                let aEsFuturo = fechaA >= ahora;
+                let bEsFuturo = fechaB >= ahora;
+
+                // Futuros arriba, pasados abajo
+                if (aEsFuturo && !bEsFuturo) return -1;
+                if (!aEsFuturo && bEsFuturo) return 1;
+
+                // Si ambos son futuros, ordenar del más cercano al más lejano
+                if (aEsFuturo && bEsFuturo) return fechaA - fechaB;
+                
+                // Si ambos ya pasaron, ordenar del más reciente al más antiguo
+                return fechaB - fechaA;
+            });
+
+            turnos.forEach(t => {
                 let esReservado = String(t.estado || "Reservado").trim().toLowerCase() === "reservado";
                 let montoNum = Number(t.monto) || 0;
+                let fechaObjeto = parsearFechaHoraObjeto(t.fecha, t.hora);
+                let esFuturo = fechaObjeto >= ahora;
 
-                if (esReservado) {
-                    totalActivo += montoNum;
+                let claseEstilo = "reserva-item";
+                let badge = "";
+
+                if (!esReservado) {
+                    claseEstilo = "reserva-item cancelado";
+                    badge = `<span class="badge-estado badge-cancelado">Cancelado</span>`;
+                } else if (esFuturo) {
+                    totalPendiente += montoNum;
+                    badge = `<span class="badge-estado badge-pendiente">⏳ Pendiente</span>`;
+                } else {
+                    totalCobrado += montoNum;
+                    claseEstilo = "reserva-item pasado";
+                    badge = `<span class="badge-estado badge-cobrado">✅ Jugado / Cobrado</span>`;
                 }
 
                 let div = document.createElement('div');
-                div.className = esReservado ? "reserva-item" : "reserva-item cancelado";
+                div.className = claseEstilo;
                 div.innerHTML = `
-                    <b>${t.deporte}</b> - ${t.fecha} a las ${t.hora}hs<br>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <b>${t.deporte}</b>
+                        ${badge}
+                    </div>
+                    📅 <b>${t.fecha}</b> a las <b>${t.hora}hs</b><br>
                     👤 <b>${t.nombre}</b> (${t.celular})<br>
-                    💰 <b>$${montoNum.toLocaleString('es-AR')}</b> | Estado: <i>${t.estado}</i>
-                    ${esReservado ? `<br><button class="btn-cancel-admin" onclick="cancelarTurnoAdmin('${t.fecha}', '${t.hora}', '${t.deporte}')">❌ Cancelar Turno</button>` : ''}
+                    💰 <b>$${montoNum.toLocaleString('es-AR')}</b>
+                    ${(esReservado && esFuturo) ? `<br><button class="btn-cancel-admin" onclick="cancelarTurnoAdmin('${t.fecha}', '${t.hora}', '${t.deporte}')">❌ Cancelar Turno</button>` : ''}
                 `;
                 contenedorLista.appendChild(div);
             });
 
-            spanRecaudacion.innerText = "$" + totalActivo.toLocaleString('es-AR');
+            spanPendiente.innerText = "$" + totalPendiente.toLocaleString('es-AR');
+            spanCobrado.innerText = "$" + totalCobrado.toLocaleString('es-AR');
 
         } catch (error) {
             contenedorLista.innerHTML = "<p style='color: red; text-align: center;'>Error al cargar los datos.</p>";
@@ -596,7 +710,7 @@
     }
 
     async function cancelarTurnoAdmin(fecha, hora, deporte) {
-        if (!confirm(`¿Estás seguro de cancelar el turno de ${deporte} del ${fecha} a las ${hora}hs?\nEsto liberará el horario y descontará el monto de la caja.`)) {
+        if (!confirm(`¿Estás seguro de cancelar el turno de ${deporte} del ${fecha} a las ${hora}hs?\nEsto liberará el horario y restará el dinero de los pendientes.`)) {
             return;
         }
 
