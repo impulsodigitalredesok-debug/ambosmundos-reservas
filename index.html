@@ -187,7 +187,6 @@
             text-decoration: underline;
         }
 
-        /* Menú de selección de Panel (Botones grandes) */
         .admin-menu-btn {
             background-color: #e0f2f1;
             color: var(--primary-color);
@@ -206,7 +205,6 @@
             color: white;
         }
 
-        /* Estilos Panel Contable / Caja */
         .finanzas-mes-box {
             background: #e0f2f1;
             border: 1px solid var(--accent-color);
@@ -352,7 +350,7 @@
         </div>
     </div>
 
-    <!-- MENÚ PRINCIPAL DEL ADMINISTRADOR (ELIGE QUÉ PANEL VER) -->
+    <!-- MENÚ PRINCIPAL DEL ADMINISTRADOR -->
     <div id="step-admin-menu" class="step">
         <h3 style="color: var(--primary-color);">Panel de Administración 🛠️</h3>
         <p style="text-align:center; color:#666; font-size:13px; margin-bottom:20px;">Seleccioná qué sección querés consultar:</p>
@@ -397,11 +395,14 @@
             </div>
         </div>
 
-        <!-- Carga de Gastos -->
+        <!-- Carga de Gastos usando Almanaque Exacto -->
         <div style="background: #fafafa; border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-bottom: 12px;">
-            <h4 style="margin: 0 0 6px 0; font-size: 12px; color: var(--primary-color);">➕ Cargar Gasto o Canchero (para este mes)</h4>
+            <h4 style="margin: 0 0 6px 0; font-size: 12px; color: var(--primary-color);">➕ Cargar Gasto (con almanaque)</h4>
+            <label for="gasto-fecha">Fecha del gasto:</label>
+            <input type="date" id="gasto-fecha" style="margin:0 0 6px 0; padding:6px; font-size:12px;">
+            
             <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 4px;">
-                <input type="text" id="gasto-concepto" placeholder="Ej: Luz, Canchero (10%)..." style="margin:0; padding:6px; font-size:12px;">
+                <input type="text" id="gasto-concepto" placeholder="Ej: Luz, Canchero..." style="margin:0; padding:6px; font-size:12px;">
                 <input type="number" id="gasto-monto" placeholder="Monto $" style="margin:0; padding:6px; font-size:12px;">
                 <button class="action-btn" style="margin:0; padding:6px 10px; font-size:12px;" onclick="agregarGasto()">Guardar</button>
             </div>
@@ -481,7 +482,7 @@
         }
     });
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyntucsSNUI53JkhCE5D7r_UZWfLD7Y-UELf0WhfQuZYEBY0yO9e8cza-wiNONyI4SE/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNN1jxN-2fs1jD6JzHw9xzlspC9bFMd287QiXyIcxvrVYG5KuM5hCToraVQH54YADf/exec";
 
     const PRECIOS = {
         'Fútbol 5': 40000,
@@ -516,6 +517,9 @@
         if(typeof stepIdentifier === 'string' && stepIdentifier.startsWith('admin')) {
             document.getElementById(`step-${stepIdentifier}`).classList.add('active');
             document.getElementById('main-container').style.maxWidth = "600px";
+            if(stepIdentifier === 'admin-contable') {
+                document.getElementById('gasto-fecha').value = new Date().toISOString().split('T')[0];
+            }
         } else {
             document.getElementById(`step-${stepIdentifier}`).classList.add('active');
             document.getElementById('main-container').style.maxWidth = "480px";
@@ -676,7 +680,6 @@
         }
     }
 
-    // --- ACCESO ADMINISTRADOR Y CARGA DE DATOS ---
     function accesoAdministrador() {
         let pin = prompt("Ingrese la contraseña de Administrador:");
         if (pin === "y ahora???") {
@@ -716,7 +719,7 @@
 
     function parsearFechaHoraObjeto(fStr, hStr) {
         let fLimpia = String(fStr).replace(/'/, '').trim();
-        let hLimpia = String(hStr).replace(/'/, '').trim();
+        let hLimpia = String(hStr || "").replace(/'/, '').trim();
         let partes = fLimpia.split('/');
         if (partes.length === 3) {
             let [h, m] = hLimpia.split(':');
@@ -730,7 +733,7 @@
         let mesesDisponibles = new Set();
 
         turnos.forEach(t => {
-            let fObj = parsearFechaHoraObjeto(t.fecha, t.hora);
+            let fObj = parsearFechaHoraObjeto(t.fecha, "");
             if (fObj.getTime() !== 0) {
                 let anio = fObj.getFullYear();
                 let mes = String(fObj.getMonth() + 1).padStart(2, '0');
@@ -766,7 +769,6 @@
         return meses[parseInt(numStr, 10) - 1] || numStr;
     }
 
-    // --- CONTROLADOR VISTA 1: CONTABLE Y GASTOS ---
     function actualizarPanelContable() {
         const spanMesFacturado = document.getElementById('mes-facturado');
         const spanMesConcesion = document.getElementById('mes-concesion');
@@ -778,8 +780,8 @@
         const mesSeleccionado = document.getElementById('filtro-mes-concesion').value;
         if (!mesSeleccionado) return;
 
-        let [anio, mesNum] = mesSeleccionado.split('-');
-        labelMesTitulo.innerText = `Caja de ${obtenerNombreMes(mesNum)} ${anio}`;
+        let [anioSel, mesSel] = mesSeleccionado.split('-');
+        labelMesTitulo.innerText = `Caja de ${obtenerNombreMes(mesSel)} ${anioSel}`;
 
         let totalFacturadoMes = 0;
         const ahora = new Date();
@@ -801,7 +803,14 @@
             }
         });
 
-        let gastosDelMes = cacheGastosGlobal.filter(g => String(g.mesAnio) === String(mesSeleccionado));
+        let gastosDelMes = cacheGastosGlobal.filter(g => {
+            let fObjG = parsearFechaHoraObjeto(g.fecha, "");
+            if (fObjG.getTime() === 0) return false;
+            let aG = fObjG.getFullYear();
+            let mG = String(fObjG.getMonth() + 1).padStart(2, '0');
+            return `${aG}-${mG}` === mesSeleccionado;
+        });
+
         let sumaGastosMes = gastosDelMes.reduce((acc, g) => acc + (Number(g.monto) || 0), 0);
 
         let montoConcesionClub = totalFacturadoMes * 0.20;
@@ -815,8 +824,8 @@
                 let divG = document.createElement('div');
                 divG.className = "gasto-item";
                 divG.innerHTML = `
-                    <span><b>${g.concepto}</b>: $${Number(g.monto).toLocaleString('es-AR')}</span>
-                    <button class="btn-eliminar-gasto" onclick="eliminarGasto('${g.mesAnio}', '${g.concepto}', ${g.monto})">❌</button>
+                    <span><b>[${g.fecha}]</b> ${g.concepto}: $${Number(g.monto).toLocaleString('es-AR')}</span>
+                    <button class="btn-eliminar-gasto" onclick="eliminarGasto('${g.fecha}', '${g.concepto}', ${g.monto})">❌</button>
                 `;
                 listaGastosMesDiv.appendChild(divG);
             });
@@ -829,21 +838,23 @@
     }
 
     async function agregarGasto() {
-        let mesAnio = document.getElementById('filtro-mes-concesion').value;
+        let fechaInput = document.getElementById('gasto-fecha').value;
         let concepto = document.getElementById('gasto-concepto').value.trim();
         let monto = Number(document.getElementById('gasto-monto').value) || 0;
 
-        if (!concepto || monto <= 0) {
-            alert("Por favor ingresá un concepto y un monto válido.");
+        if (!fechaInput || !concepto || monto <= 0) {
+            alert("Por favor completá fecha, concepto y un monto válido.");
             return;
         }
+
+        let fechaLegible = formatearFechaDDMMYYYY(fechaInput);
 
         try {
             let response = await fetch(APPS_SCRIPT_URL, {
                 method: 'POST',
                 body: JSON.stringify({
                     accion: "guardar_gasto",
-                    mesAnio: mesAnio,
+                    fecha: fechaLegible,
                     concepto: concepto,
                     monto: monto
                 })
@@ -861,15 +872,15 @@
         }
     }
 
-    async function eliminarGasto(mesAnio, concepto, monto) {
-        if (!confirm(`¿Eliminar gasto "${concepto}" por $${Number(monto).toLocaleString('es-AR')}?`)) return;
+    async function eliminarGasto(fecha, concepto, monto) {
+        if (!confirm(`¿Eliminar gasto "${concepto}" del ${fecha} por $${Number(monto).toLocaleString('es-AR')}?`)) return;
 
         try {
             let response = await fetch(APPS_SCRIPT_URL, {
                 method: 'POST',
                 body: JSON.stringify({
                     accion: "eliminar_gasto",
-                    mesAnio: mesAnio,
+                    fecha: fecha,
                     concepto: concepto,
                     monto: monto
                 })
@@ -885,7 +896,6 @@
         }
     }
 
-    // --- CONTROLADOR VISTA 2: TURNOS Y FILTROS ---
     function limpiarFiltrosTurnos() {
         document.getElementById('filtro-desde').value = "";
         document.getElementById('filtro-hasta').value = "";
