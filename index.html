@@ -632,17 +632,32 @@
             return fSheet === fechaBusqueda && hSheet === targetHora && estadoValido;
         });
 
-        let hayFutbol9 = matchFechaHora.some(r => String(r.deporte).toLowerCase().includes('futbol 9'));
-        let cantFutbol5 = matchFechaHora.filter(r => String(r.deporte).toLowerCase().includes('futbol 5')).length;
-        let cantPadel = matchFechaHora.filter(r => String(r.deporte).toLowerCase().includes('padel')).length;
+        // Normalizamos el texto de los deportes para evitar problemas con tildes o mayúsculas
+        let hayFutbol9 = matchFechaHora.some(r => {
+            let d = String(r.deporte || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            return d.includes('futbol 9');
+        });
 
-        if (deporte === 'Fútbol 9') {
+        let cantFutbol5 = matchFechaHora.filter(r => {
+            let d = String(r.deporte || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            return d.includes('futbol 5');
+        }).length;
+
+        let cantPadel = matchFechaHora.filter(r => {
+            let d = String(r.deporte || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            return d.includes('padel');
+        }).length;
+
+        let deporteNorm = String(deporte).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+        // Lógica estricta de bloqueo cruzado y canchas
+        if (deporteNorm.includes('futbol 9')) {
             return hayFutbol9 || cantFutbol5 >= 3;
         }
-        if (deporte === 'Fútbol 5') {
+        if (deporteNorm.includes('futbol 5')) {
             return hayFutbol9 || cantFutbol5 >= 3;
         }
-        if (deporte === 'Pádel') {
+        if (deporteNorm.includes('padel')) {
             return cantPadel >= 2;
         }
         return false;
