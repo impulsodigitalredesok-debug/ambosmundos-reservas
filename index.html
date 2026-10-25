@@ -496,7 +496,7 @@
         }
     });
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzDpCIUiXe-SZV74k1X3faBjTh54bVSAnTTGmsImP1z7ntjmKWa-1ujOO8asBvpECY/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxQft9YT2VOvDODZt_blPqr_13drZJlgIsIZlaXGS1gunSpF_WuBbFUEfFpgrfnHY3x/exec";
 
     const PRECIOS = {
         'Fútbol 5': 40000,
@@ -627,11 +627,7 @@
         let matchFechaHora = reservasOcupadas.filter(r => {
             if (!r.fecha || !r.hora) return false;
             let fSheet = String(r.fecha).replace(/'/, '').trim();
-            // Limpieza robusta de hora en JS por si el Excel trae formato largo
-            let rawH = String(r.hora).replace(/'/, '').trim();
-            let hSheet = rawH.length > 5 ? rawH.substring(rawH.indexOf(':') - 2, rawH.indexOf(':') + 3).trim() : rawH;
-            if(hSheet.length !== 5) hSheet = rawH.substring(0, 5);
-
+            let hSheet = String(r.hora).replace(/'/, '').substring(0, 5).trim();
             let estadoValido = String(r.estado || "Reservado").trim().toLowerCase() === "reservado";
             return fSheet === fechaBusqueda && hSheet === targetHora && estadoValido;
         });
