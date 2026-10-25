@@ -632,7 +632,6 @@
             return fSheet === fechaBusqueda && hSheet === targetHora && estadoValido;
         });
 
-        // Normalizamos el texto de los deportes para evitar problemas con tildes o mayúsculas
         let hayFutbol9 = matchFechaHora.some(r => {
             let d = String(r.deporte || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
             return d.includes('futbol 9');
@@ -650,13 +649,16 @@
 
         let deporteNorm = String(deporte).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
-        // Lógica estricta de bloqueo cruzado y canchas
+        // REGLA ACTUALIZADA: 
+        // Si se pide Fútbol 9: se anula si hay Fútbol 9 o SI YA HAY AL MENOS UN Fútbol 5 ocupado.
         if (deporteNorm.includes('futbol 9')) {
-            return hayFutbol9 || cantFutbol5 >= 3;
+            return hayFutbol9 || cantFutbol5 > 0;
         }
+        // Si se pide Fútbol 5: se anula si hay Fútbol 9 o si ya están las 3 canchas de Fútbol 5 ocupadas.
         if (deporteNorm.includes('futbol 5')) {
             return hayFutbol9 || cantFutbol5 >= 3;
         }
+        // Pádel sigue con sus 2 canchas independientes.
         if (deporteNorm.includes('padel')) {
             return cantPadel >= 2;
         }
