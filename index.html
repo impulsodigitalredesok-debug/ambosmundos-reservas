@@ -200,12 +200,12 @@
             text-decoration: underline;
         }
 
-        /* Estilos Panel Admin Avanzado */
+        /* Estilos Panel Contable y de Caja */
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 8px;
+            margin-bottom: 8px;
         }
         .stat-box {
             padding: 10px;
@@ -218,26 +218,50 @@
         .stat-box h4 { margin: 0 0 4px 0; font-size: 11px; text-transform: uppercase; }
         .stat-box.pendiente h4 { color: #e65100; }
         .stat-box.cobrado h4 { color: #2e7d32; }
-        .stat-box .amount { font-size: 16px; font-weight: bold; margin: 0; }
+        .stat-box .amount { font-size: 15px; font-weight: bold; margin: 0; }
         .stat-box.pendiente .amount { color: #ef6c00; }
         .stat-box.cobrado .amount { color: #2e7d32; }
 
-        .concesion-box {
+        .finanzas-mes-box {
             background: #e0f2f1;
             border: 1px solid var(--accent-color);
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
-            text-align: center;
             margin-bottom: 10px;
         }
-        .concesion-box h4 { margin: 0 0 2px 0; color: var(--primary-color); font-size: 12px; text-transform: uppercase; }
-        .concesion-box .amount { font-size: 18px; font-weight: bold; color: var(--primary-color); margin: 0; }
+        .finanzas-mes-box h4 { margin: 0 0 6px 0; color: var(--primary-color); font-size: 13px; text-transform: uppercase; text-align: center; }
+        .linea-finanza {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .linea-finanza.neto {
+            border-top: 1px dashed var(--accent-color);
+            padding-top: 6px;
+            margin-top: 6px;
+            font-weight: bold;
+            font-size: 15px;
+            color: var(--primary-color);
+        }
+
+        .gasto-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            font-size: 12px;
+            border: 1px solid #ddd;
+        }
 
         .filters-box {
             background: #f1f8e9;
             padding: 10px;
             border-radius: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             border: 1px solid #c8e6c9;
         }
 
@@ -251,15 +275,14 @@
         }
         .reserva-item.pasado { border-left-color: #9e9e9e; background: #f0f0f0; }
         .reserva-item.cancelado { border-left-color: var(--danger-color); opacity: 0.6; text-decoration: line-through; }
-        .btn-cancel-admin {
+        .btn-cancel-admin, .btn-eliminar-gasto {
             background-color: var(--danger-color);
             color: white;
             border: none;
-            padding: 4px 8px;
+            padding: 3px 6px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 11px;
-            margin-top: 4px;
+            font-size: 10px;
         }
 
         .loading { text-align: center; font-style: italic; color: #666; margin: 10px 0; }
@@ -348,10 +371,36 @@
     <div id="step-admin" class="step">
         <h3 style="color: var(--primary-color); margin-bottom: 8px;">Panel de Administración 🛠️</h3>
         
-        <!-- Concesión del Mes -->
-        <div class="concesion-box">
-            <h4 id="label-concesion-titulo">Total Concesión del Mes</h4>
-            <div class="amount" id="admin-concesion-mes">$0</div>
+        <!-- RESUMEN FINANCIERO DEL MES SELECCIONADO (CONCESIÓN 20% + GASTOS + NETO SOCIA) -->
+        <div class="finanzas-mes-box">
+            <h4 id="label-mes-titulo">Caja del Mes</h4>
+            <div class="linea-finanza">
+                <span>Total Facturado (Jugado):</span>
+                <span id="mes-facturado" style="font-weight: bold;">$0</span>
+            </div>
+            <div class="linea-finanza">
+                <span>Club Ambos Mundos (20% Concesión):</span>
+                <span id="mes-concesion" style="color: #c62828;">-$0</span>
+            </div>
+            <div class="linea-finanza">
+                <span>Gastos Operativos / Canchero:</span>
+                <span id="mes-gastos" style="color: #c62828;">-$0</span>
+            </div>
+            <div class="linea-finanza neto">
+                <span>💰 Ganancia Neta (Para Socia y Vos):</span>
+                <span id="mes-neto">$0</span>
+            </div>
+        </div>
+
+        <!-- SECCIÓN CARGA DE GASTOS -->
+        <div style="background: #fafafa; border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+            <h4 style="margin: 0 0 6px 0; font-size: 12px; color: var(--primary-color);">➕ Cargar Gasto o Sueldo Canchero (para este mes)</h4>
+            <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 4px;">
+                <input type="text" id="gasto-concepto" placeholder="Ej: Luz, Canchero (10%)..." style="margin:0; padding:6px; font-size:12px;">
+                <input type="number" id="gasto-monto" placeholder="Monto $" style="margin:0; padding:6px; font-size:12px;">
+                <button class="action-btn" style="margin:0; padding:6px 10px; font-size:12px;" onclick="agregarGasto()">Agregar</button>
+            </div>
+            <div id="lista-gastos-mes" style="margin-top: 6px; max-height: 80px; overflow-y: auto;"></div>
         </div>
 
         <!-- Totales Generales -->
@@ -366,17 +415,17 @@
             </div>
         </div>
 
-        <!-- FILTROS AVANZADOS (Deporte, Rango de Fechas y Buscador) -->
+        <!-- FILTROS AVANZADOS -->
         <div class="filters-box">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
                 <div>
-                    <label for="filtro-mes-concesion">📅 Mes Concesión:</label>
+                    <label for="filtro-mes-concesion">📅 Mes:</label>
                     <select id="filtro-mes-concesion" onchange="actualizarCalculosAdmin()"></select>
                 </div>
                 <div>
                     <label for="filtro-deporte">⚽ Deporte:</label>
                     <select id="filtro-deporte" onchange="actualizarCalculosAdmin()">
-                        <option value="TODOS">Todos los deportes</option>
+                        <option value="TODOS">Todos</option>
                         <option value="Fútbol 5">Fútbol 5</option>
                         <option value="Fútbol 9">Fútbol 9</option>
                         <option value="Pádel">Pádel</option>
@@ -384,13 +433,13 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px;">
                 <div>
-                    <label for="filtro-desde">📅 Desde fecha:</label>
+                    <label for="filtro-desde">Desde fecha:</label>
                     <input type="date" id="filtro-desde" onchange="actualizarCalculosAdmin()">
                 </div>
                 <div>
-                    <label for="filtro-hasta">📅 Hasta fecha:</label>
+                    <label for="filtro-hasta">Hasta fecha:</label>
                     <input type="date" id="filtro-hasta" onchange="actualizarCalculosAdmin()">
                 </div>
             </div>
@@ -400,15 +449,15 @@
                 <input type="text" id="buscador-nombre" placeholder="Nombre o celular..." oninput="actualizarCalculosAdmin()">
             </div>
 
-            <button class="action-btn" style="padding: 6px; font-size: 12px; margin-top: 6px; background-color: #78909c;" onclick="limpiarFiltrosFechas()">🔄 Limpiar Fechas / Filtros</button>
+            <button class="action-btn" style="padding: 5px; font-size: 11px; margin-top: 4px; background-color: #78909c;" onclick="limpiarFiltrosFechas()">🔄 Limpiar Filtros</button>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
             <h4 style="margin: 0; font-size: 13px;">Listado de Turnos:</h4>
-            <button class="action-btn" style="width: auto; padding: 5px 10px; margin: 0; font-size: 11px;" onclick="cargarPanelAdmin()">🔄 Actualizar</button>
+            <button class="action-btn" style="width: auto; padding: 4px 8px; margin: 0; font-size: 11px;" onclick="cargarPanelAdmin()">🔄 Actualizar</button>
         </div>
 
-        <div id="admin-lista-turnos" style="max-height: 220px; overflow-y: auto; margin-bottom: 12px;">
+        <div id="admin-lista-turnos" style="max-height: 200px; overflow-y: auto; margin-bottom: 12px;">
             <div class="loading">Cargando turnos desde Google Sheets...</div>
         </div>
 
@@ -437,8 +486,7 @@
         }
     });
 
-    // URL CORRECTA FIJA
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZg9ylgmq-nTDmmRfc4HbDCTEn0JtP-3oWLs0Jj_6ukxEra1STeMDiVKSR8t6NWs1d/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw4MlppMgctcW4WdAs3FaDs_tf4BOE_7V28kre0wVkvOebY4Yfki6ryH1wK5Az8u3MO/exec";
 
     const PRECIOS = {
         'Fútbol 5': 40000,
@@ -449,6 +497,7 @@
     let reserva = { deporte: "", nombre: "", celular: "", fecha: "", hora: "", monto: 0 };
     let reservasOcupadas = [];
     let cacheTurnosGlobal = [];
+    let cacheGastosGlobal = [];
 
     function formatearFechaDDMMYYYY(fechaStr) {
         if (!fechaStr) return "";
@@ -536,7 +585,8 @@
 
         try {
             let response = await fetch(APPS_SCRIPT_URL);
-            reservasOcupadas = await response.json();
+            let dataServidor = await response.json();
+            reservasOcupadas = dataServidor.reservas || dataServidor;
         } catch (error) {
             reservasOcupadas = [];
         }
@@ -631,7 +681,7 @@
         }
     }
 
-    // --- PANEL DE ADMINISTRACIÓN ---
+    // --- PANEL DE ADMINISTRACIÓN Y CONTABILIDAD ---
     function accesoAdministrador() {
         let pin = prompt("Ingrese la contraseña de Administrador:");
         if (pin === "y ahora???") {
@@ -655,19 +705,17 @@
 
     async function cargarPanelAdmin() {
         const contenedorLista = document.getElementById('admin-lista-turnos');
-        contenedorLista.innerHTML = "<div class='loading'>Cargando turnos desde Google Sheets...</div>";
+        contenedorLista.innerHTML = "<div class='loading'>Cargando datos financieros desde Google Sheets...</div>";
 
         try {
             let response = await fetch(APPS_SCRIPT_URL);
-            cacheTurnosGlobal = await response.json();
+            let dataServidor = await response.json();
+
+            cacheTurnosGlobal = dataServidor.reservas || [];
+            cacheGastosGlobal = dataServidor.gastos || [];
 
             if (cacheTurnosGlobal.length === 0) {
                 contenedorLista.innerHTML = "<p style='text-align:center; color:#666;'>No hay turnos registrados.</p>";
-                document.getElementById('admin-pendiente').innerText = "$0";
-                document.getElementById('admin-cobrado').innerText = "$0";
-                document.getElementById('admin-concesion-mes').innerText = "$0";
-                document.getElementById('filtro-mes-concesion').innerHTML = "<option>Sin meses</option>";
-                return;
             }
 
             poblarSelectorMeses(cacheTurnosGlobal);
@@ -727,31 +775,149 @@
         actualizarCalculosAdmin();
     }
 
+    async function agregarGasto() {
+        let mesAnio = document.getElementById('filtro-mes-concesion').value;
+        let concepto = document.getElementById('gasto-concepto').value.trim();
+        let monto = Number(document.getElementById('gasto-monto').value) || 0;
+
+        if (!concepto || monto <= 0) {
+            alert("Por favor ingresá un concepto y un monto válido para el gasto.");
+            return;
+        }
+
+        try {
+            let response = await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    accion: "guardar_gasto",
+                    mesAnio: mesAnio,
+                    concepto: concepto,
+                    monto: monto
+                })
+            });
+            let resultado = await response.json();
+            if (resultado.status === "success") {
+                document.getElementById('gasto-concepto').value = "";
+                document.getElementById('gasto-monto').value = "";
+                cargarPanelAdmin();
+            } else {
+                alert("No se pudo guardar el gasto.");
+            }
+        } catch (e) {
+            alert("Error de conexión al guardar el gasto.");
+        }
+    }
+
+    async function eliminarGasto(mesAnio, concepto, monto) {
+        if (!confirm(`¿Eliminar gasto "${concepto}" por $${monto.toLocaleString('es-AR')}?`)) return;
+
+        try {
+            let response = await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    accion: "eliminar_gasto",
+                    mesAnio: mesAnio,
+                    concepto: concepto,
+                    monto: monto
+                })
+            });
+            let resultado = await response.json();
+            if (resultado.status === "success") {
+                cargarPanelAdmin();
+            } else {
+                alert("No se pudo eliminar el gasto.");
+            }
+        } catch (e) {
+            alert("Error de conexión.");
+        }
+    }
+
     function actualizarCalculosAdmin() {
         const contenedorLista = document.getElementById('admin-lista-turnos');
         const spanPendiente = document.getElementById('admin-pendiente');
         const spanCobrado = document.getElementById('admin-cobrado');
-        const spanConcesionMes = document.getElementById('admin-concesion-mes');
-        const labelConcesionTitulo = document.getElementById('label-concesion-titulo');
+        
+        const spanMesFacturado = document.getElementById('mes-facturado');
+        const spanMesConcesion = document.getElementById('mes-concesion');
+        const spanMesGastos = document.getElementById('mes-gastos');
+        const spanMesNeto = document.getElementById('mes-neto');
+        const listaGastosMesDiv = document.getElementById('lista-gastos-mes');
+        const labelMesTitulo = document.getElementById('label-mes-titulo');
         
         const mesSeleccionado = document.getElementById('filtro-mes-concesion').value;
         const deporteSeleccionado = document.getElementById('filtro-deporte').value;
-        const fechaDesde = document.getElementById('filtro-desde').value; // Formato YYYY-MM-DD
-        const fechaHasta = document.getElementById('filtro-hasta').value; // Formato YYYY-MM-DD
+        const fechaDesde = document.getElementById('filtro-desde').value;
+        const fechaHasta = document.getElementById('filtro-hasta').value;
         const textoBusqueda = document.getElementById('buscador-nombre').value.toLowerCase().trim();
 
         if (mesSeleccionado) {
             let [anio, mesNum] = mesSeleccionado.split('-');
-            labelConcesionTitulo.innerText = `Total Concesión (${obtenerNombreMes(mesNum)} ${anio})`;
+            labelMesTitulo.innerText = `Caja del Mes (${obtenerNombreMes(mesNum)} ${anio})`;
         }
 
         contenedorLista.innerHTML = "";
         let totalPendiente = 0;
         let totalCobradoHistorial = 0;
-        let totalConcesionMes = 0;
+        let totalFacturadoMesSeleccionado = 0;
         const ahora = new Date();
 
-        // Orden cronológico: Próximos arriba, pasados abajo
+        // 1. Calcular facturado del mes seleccionado (turnos ya jugados en ese mes)
+        cacheTurnosGlobal.forEach(t => {
+            let esReservado = String(t.estado || "Reservado").trim().toLowerCase() === "reservado";
+            let montoNum = Number(t.monto) || 0;
+            let fObj = parsearFechaHoraObjeto(t.fecha, t.hora);
+            let esFuturo = fObj >= ahora;
+
+            if (esReservado) {
+                if (esFuturo) {
+                    totalPendiente += montoNum;
+                } else {
+                    totalCobradoHistorial += montoNum;
+                    if (fObj.getTime() !== 0) {
+                        let anio = fObj.getFullYear();
+                        let mes = String(fObj.getMonth() + 1).padStart(2, '0');
+                        if (`${anio}-${mes}` === mesSeleccionado) {
+                            totalFacturadoMesSeleccionado += montoNum;
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Calcular Gastos del mes seleccionado
+        let gastosDelMes = cacheGastosGlobal.filter(g => g.mesAnio === mesSeleccionado);
+        let sumaGastosMes = gastosDelMes.reduce((acc, g) => acc + g.monto, 0);
+
+        // 3. Cálculos de Concesión (20%) y Neto
+        let montoConcesionClub = totalFacturadoMesSeleccionado * 0.20;
+        let gananciaNetaSocia = totalFacturadoMesSeleccionado - montoConcesionClub - sumaGastosMes;
+
+        // Renderizar lista de gastos del mes en pantalla
+        listaGastosMesDiv.innerHTML = "";
+        if (gastosDelMes.length === 0) {
+            listaGastosMesDiv.innerHTML = "<p style='font-size:11px; color:#666; text-align:center; margin:2px 0;'>Sin gastos cargados este mes.</p>";
+        } else {
+            gastosDelMes.forEach(g => {
+                let divG = document.createElement('div');
+                divG.className = "gasto-item";
+                divG.innerHTML = `
+                    <span><b>${g.concepto}</b>: $${g.monto.toLocaleString('es-AR')}</span>
+                    <button class="btn-eliminar-gasto" onclick="eliminarGasto('${g.mesAnio}', '${g.concepto}', ${g.monto})">❌</button>
+                `;
+                listaGastosMesDiv.appendChild(divG);
+            });
+        }
+
+        // Actualizar valores en las tarjetas de finanzas
+        spanMesFacturado.innerText = "$" + totalFacturadoMesSeleccionado.toLocaleString('es-AR');
+        spanMesConcesion.innerText = "-$" + montoConcesionClub.toLocaleString('es-AR');
+        spanMesGastos.innerText = "-$" + sumaGastosMes.toLocaleString('es-AR');
+        spanMesNeto.innerText = "$" + gananciaNetaSocia.toLocaleString('es-AR');
+
+        spanPendiente.innerText = "$" + totalPendiente.toLocaleString('es-AR');
+        spanCobrado.innerText = "$" + totalCobradoHistorial.toLocaleString('es-AR');
+
+        // Ordenar turnos para la lista visual
         let turnosOrdenados = [...cacheTurnosGlobal].sort((a, b) => {
             let fechaA = parsearFechaHoraObjeto(a.fecha, a.hora);
             let fechaB = parsearFechaHoraObjeto(b.fecha, b.hora);
@@ -772,35 +938,12 @@
             let fechaObjeto = parsearFechaHoraObjeto(t.fecha, t.hora);
             let esFuturo = fechaObjeto >= ahora;
 
-            // Totales globales
-            if (esReservado) {
-                if (esFuturo) {
-                    totalPendiente += montoNum;
-                } else {
-                    totalCobradoHistorial += montoNum;
-                }
-
-                // Concesión del mes seleccionado (turnos ya jugados)
-                if (fechaObjeto.getTime() !== 0 && !esFuturo) {
-                    let anio = fechaObjeto.getFullYear();
-                    let mes = String(fechaObjeto.getMonth() + 1).padStart(2, '0');
-                    if (`${anio}-${mes}` === mesSeleccionado) {
-                        totalConcesionMes += montoNum;
-                    }
-                }
-            }
-
-            // APLICAR FILTROS (Deporte, Rango de Fechas y Buscador)
             let deporteTurno = String(t.deporte || "").trim();
             let nombreTurno = String(t.nombre || "").toLowerCase();
             let celularTurno = String(t.celular || "").toLowerCase();
 
-            // Filtro Deporte
-            if (deporteSeleccionado !== "TODOS" && !deporteTurno.toLowerCase().includes(deporteSeleccionado.toLowerCase())) {
-                return;
-            }
+            if (deporteSeleccionado !== "TODOS" && !deporteTurno.toLowerCase().includes(deporteSeleccionado.toLowerCase())) return;
 
-            // Filtro Rango de Fechas (Desde / Hasta)
             if (fechaObjeto.getTime() !== 0) {
                 let anioT = fechaObjeto.getFullYear();
                 let mesT = String(fechaObjeto.getMonth() + 1).padStart(2, '0');
@@ -811,10 +954,7 @@
                 if (fechaHasta && fechaTurnoStr > fechaHasta) return;
             }
 
-            // Filtro Buscador Nombre/Celular
-            if (textoBusqueda !== "" && !nombreTurno.includes(textoBusqueda) && !celularTurno.includes(textoBusqueda)) {
-                return;
-            }
+            if (textoBusqueda !== "" && !nombreTurno.includes(textoBusqueda) && !celularTurno.includes(textoBusqueda)) return;
 
             contadorVisibles++;
 
@@ -849,16 +989,10 @@
         if (contadorVisibles === 0) {
             contenedorLista.innerHTML = "<p style='text-align:center; color:#666; font-style: italic;'>No se encontraron turnos con los filtros seleccionados.</p>";
         }
-
-        spanPendiente.innerText = "$" + totalPendiente.toLocaleString('es-AR');
-        spanCobrado.innerText = "$" + totalCobradoHistorial.toLocaleString('es-AR');
-        spanConcesionMes.innerText = "$" + totalConcesionMes.toLocaleString('es-AR');
     }
 
     async function cancelarTurnoAdmin(fecha, hora, deporte) {
-        if (!confirm(`¿Estás seguro de cancelar el turno de ${deporte} del ${fecha} a las ${hora}hs?\nEsto liberará el horario y restará el dinero.`)) {
-            return;
-        }
+        if (!confirm(`¿Estás seguro de cancelar el turno de ${deporte} del ${fecha} a las ${hora}hs?\nEsto liberará el horario y restará el dinero.`)) return;
 
         const contenedorLista = document.getElementById('admin-lista-turnos');
         contenedorLista.innerHTML = "<div class='loading'>Actualizando planilla...</div>";
