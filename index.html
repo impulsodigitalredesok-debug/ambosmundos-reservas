@@ -746,7 +746,7 @@
         let esPadel = reserva.deporte.toLowerCase().includes('pádel') || reserva.deporte.toLowerCase().includes('padel');
 
         if (reserva.esFijo) {
-            loaderIcon.innerText = esPadel ? "🎾" : "⚽";
+            loaderIcon.innerText = esPadel ? "🎾🔄" : "⚽🔄";
             loaderTitle.innerText = "Generando tu Turno Fijo...";
             loaderText.innerText = "⏳ Esto puede demorar unos segundos extra porque estamos programando tus turnos futuros. Por favor, NO cierres la página.";
         } else {
@@ -785,8 +785,13 @@
                     document.getElementById('msg-exito-detalle').innerText = "Tu reserva quedó registrada en el sistema del club.";
                 }
 
-                let tipoTexto = reserva.esFijo ? `TURNO FIJO (todos los ${diaNombre})` : `para el día ${fechaLegible}`;
-                let mensajeWhatsApp = `¡Hola! Acabo de reservar un ${tipoTexto} para ${reserva.deporte} a las ${reserva.hora}hs. Precio por partido: $${precioFormateado}. Mi nombre es ${reserva.nombre}.`;
+                let mensajeWhatsApp = "";
+                if (reserva.esFijo) {
+                    mensajeWhatsApp = `¡Hola! Acabo de reservar un turno fijo (todos los ${diaNombre}) para ${reserva.deporte} a las ${reserva.hora}hs. Precio por partido: $${precioFormateado}. Mi nombre es ${reserva.nombre}.`;
+                } else {
+                    mensajeWhatsApp = `¡Hola! Acabo de reservar un turno para el día ${fechaLegible} para ${reserva.deporte} a las ${reserva.hora}hs. Precio por partido: $${precioFormateado}. Mi nombre es ${reserva.nombre}.`;
+                }
+
                 document.getElementById('btn-enviar-wa').href = `https://wa.me/5492364351535?text=${encodeURIComponent(mensajeWhatsApp)}`;
 
                 changeStep(4);
