@@ -17,7 +17,6 @@
             --text-color: #333333;
             --danger-color: #e53935;
             --success-color: #2e7d32;
-            --install-color: #ff8f00;
         }
 
         body {
@@ -70,13 +69,8 @@
             width: 100%;
         }
 
-        .step {
-            display: none;
-        }
-
-        .step.active {
-            display: block;
-        }
+        .step { display: none; }
+        .step.active { display: block; }
 
         .sport-btn, .time-btn, .action-btn {
             width: 100%;
@@ -145,15 +139,30 @@
             font-size: 13px;
         }
 
+        .checkbox-fijo-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #e0f2f1;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--accent-color);
+            margin: 12px 0;
+            cursor: pointer;
+        }
+        .checkbox-fijo-box input {
+            width: auto;
+            margin: 0;
+            transform: scale(1.3);
+        }
+
         .action-btn {
             background-color: var(--primary-color);
             color: white;
             padding: 14px;
         }
 
-        .action-btn:hover {
-            background-color: #00332c;
-        }
+        .action-btn:hover { background-color: #00332c; }
 
         .cancel-section {
             margin-top: 20px;
@@ -182,10 +191,6 @@
             text-decoration: none;
             cursor: pointer;
         }
-        .admin-link:hover {
-            color: var(--primary-color);
-            text-decoration: underline;
-        }
 
         .admin-menu-btn {
             background-color: #e0f2f1;
@@ -199,10 +204,6 @@
             margin-bottom: 12px;
             cursor: pointer;
             text-align: center;
-        }
-        .admin-menu-btn:hover {
-            background-color: var(--accent-color);
-            color: white;
         }
 
         .finanzas-mes-box {
@@ -234,7 +235,6 @@
             padding: 16px;
             border-radius: 12px;
             margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
 
         .gasto-item {
@@ -283,6 +283,8 @@
         .badge-pendiente { background: #ffe0b2; color: #e65100; }
         .badge-cobrado { background: #c8e6c9; color: #2e7d32; }
         .badge-cancelado { background: #ffcdd2; color: #c62828; }
+        .badge-fijo { background: #e1bee7; color: #4a148c; }
+        .badge-venciendo { background: #ffccbc; color: #d84315; }
     </style>
 </head>
 <body>
@@ -344,8 +346,13 @@
         <label for="fecha">Fecha:</label>
         <input type="date" id="fecha" onchange="cargarHorariosDisponibles()">
 
+        <label class="checkbox-fijo-box">
+            <input type="checkbox" id="chk-turno-fijo">
+            <span style="font-weight: bold; color: var(--primary-color);">🔄 Turno Fijo</span>
+        </label>
+
         <div id="loading-horarios" class="loading" style="display: none;">Cargando turnos disponibles...</div>
-        <div id="horarios-container" style="max-height: 300px; overflow-y: auto; margin-top: 10px;"></div>
+        <div id="horarios-container" style="max-height: 260px; overflow-y: auto; margin-top: 10px;"></div>
 
         <button class="action-btn" style="background-color: #78909c; margin-top: 15px;" onclick="changeStep(2)">Volver</button>
     </div>
@@ -354,7 +361,7 @@
     <div id="step-4" class="step">
         <div style="text-align: center; padding: 10px;">
             <h2 style="color: var(--success-color);">¡Turno confirmado con éxito! 🎉</h2>
-            <p>Tu reserva quedó registrada en el sistema del club.</p>
+            <p id="msg-exito-detalle">Tu reserva quedó registrada en el sistema del club.</p>
             <p id="precio-info" style="font-weight: bold; color: var(--primary-color); font-size: 18px;"></p>
             <p><b>Serás redirigido a WhatsApp automáticamente...</b></p>
         </div>
@@ -376,7 +383,7 @@
         <button class="action-btn" style="background-color: #78909c; margin-top: 10px;" onclick="changeStep(1)">Cerrar Sesión Admin</button>
     </div>
 
-    <!-- VISTA 1: PANEL CONTABLE Y DE GASTOS -->
+    <!-- VISTA 1: PANEL CONTABLE -->
     <div id="step-admin-contable" class="step">
         <h3 style="color: var(--primary-color); margin-bottom: 8px;">📊 Caja y Concesión</h3>
         
@@ -400,13 +407,13 @@
                 <span id="mes-gastos" style="color: #c62828;">-$0</span>
             </div>
             <div class="linea-finanza neto">
-                <span>💰 Ganancia Neta:</span>
+                <span>💰 Ganancia Neta (Socia y Vos):</span>
                 <span id="mes-neto">$0</span>
             </div>
         </div>
 
         <div class="gasto-form-box">
-            <h4 style="margin: 0 0 10px 0; font-size: 13px; color: var(--primary-color); text-transform: uppercase;">➕ Registrar Nuevo Gasto o Canchero</h4>
+            <h4 style="margin: 0 0 10px 0; font-size: 13px; color: var(--primary-color); text-transform: uppercase;">➕ Registrar Nuevo Gasto</h4>
             
             <label for="gasto-fecha">Fecha del gasto:</label>
             <input type="date" id="gasto-fecha">
@@ -431,16 +438,14 @@
         <h3 style="color: var(--primary-color); margin-bottom: 8px;">📅 Listado de Turnos</h3>
         
         <div class="filters-box">
-            <div style="display: grid; grid-template-columns: 1fr; gap: 4px;">
-                <div>
-                    <label for="filtro-deporte">⚽ Deporte:</label>
-                    <select id="filtro-deporte" onchange="actualizarPanelTurnos()">
-                        <option value="TODOS">Todos los deportes</option>
-                        <option value="Fútbol 5">Fútbol 5</option>
-                        <option value="Fútbol 9">Fútbol 9</option>
-                        <option value="Pádel">Pádel</option>
-                    </select>
-                </div>
+            <div>
+                <label for="filtro-deporte">⚽ Deporte:</label>
+                <select id="filtro-deporte" onchange="actualizarPanelTurnos()">
+                    <option value="TODOS">Todos los deportes</option>
+                    <option value="Fútbol 5">Fútbol 5</option>
+                    <option value="Fútbol 9">Fútbol 9</option>
+                    <option value="Pádel">Pádel</option>
+                </select>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px;">
@@ -496,7 +501,7 @@
         }
     });
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxQft9YT2VOvDODZt_blPqr_13drZJlgIsIZlaXGS1gunSpF_WuBbFUEfFpgrfnHY3x/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby8GRxryNd7wDMNEdGwWIkQ-nV0V68dKZFIUxrxb34A_F96sE1En_w-Eus5QY-G6DcE/exec";
 
     const PRECIOS = {
         'Fútbol 5': 40000,
@@ -504,7 +509,7 @@
         'Pádel': 40000
     };
 
-    let reserva = { deporte: "", nombre: "", celular: "", fecha: "", hora: "", monto: 0 };
+    let reserva = { deporte: "", nombre: "", celular: "", fecha: "", hora: "", monto: 0, esFijo: false };
     let reservasOcupadas = [];
     let cacheTurnosGlobal = [];
     let cacheGastosGlobal = [];
@@ -518,11 +523,22 @@
         return fechaStr;
     }
 
+    function obtenerNombreDiaDeLaSemana(fechaStr) {
+        let partes = fechaStr.split('T')[0].split('-');
+        if(partes.length === 3) {
+            let d = new Date(Number(partes[0]), Number(partes[1]) - 1, Number(partes[2]));
+            let dias = ["Domingos", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábados"];
+            return dias[d.getDay()];
+        }
+        return "";
+    }
+
     function resetFormulario() {
-        reserva = { deporte: "", nombre: "", celular: "", fecha: "", hora: "", monto: 0 };
+        reserva = { deporte: "", nombre: "", celular: "", fecha: "", hora: "", monto: 0, esFijo: false };
         document.getElementById('nombre').value = "";
         document.getElementById('celular').value = "";
         document.getElementById('fecha').value = "";
+        document.getElementById('chk-turno-fijo').checked = false;
         document.getElementById('horarios-container').innerHTML = "";
     }
 
@@ -649,16 +665,12 @@
 
         let deporteNorm = String(deporte).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
-        // REGLA ACTUALIZADA: 
-        // Si se pide Fútbol 9: se anula si hay Fútbol 9 o SI YA HAY AL MENOS UN Fútbol 5 ocupado.
         if (deporteNorm.includes('futbol 9')) {
             return hayFutbol9 || cantFutbol5 > 0;
         }
-        // Si se pide Fútbol 5: se anula si hay Fútbol 9 o si ya están las 3 canchas de Fútbol 5 ocupadas.
         if (deporteNorm.includes('futbol 5')) {
             return hayFutbol9 || cantFutbol5 >= 3;
         }
-        // Pádel sigue con sus 2 canchas independientes.
         if (deporteNorm.includes('padel')) {
             return cantPadel >= 2;
         }
@@ -667,10 +679,20 @@
 
     async function realizarReserva(hora) {
         reserva.hora = hora;
+        reserva.esFijo = document.getElementById('chk-turno-fijo').checked;
+
         let precioFormateado = reserva.monto.toLocaleString('es-AR');
         let fechaLegible = formatearFechaDDMMYYYY(reserva.fecha);
+        let diaNombre = obtenerNombreDiaDeLaSemana(reserva.fecha);
+
+        let mensajeConfirmacion = "";
+        if (reserva.esFijo) {
+            mensajeConfirmacion = `Vas a reservar un TURNO FIJO para ${reserva.deporte} todos los ${diaNombre} a las ${reserva.hora}hs.\n¿Deseás confirmar la reserva permanente?`;
+        } else {
+            mensajeConfirmacion = `¿Confirmar reserva para ${reserva.deporte} el día ${fechaLegible} a las ${reserva.hora}hs?\nTotal: $${precioFormateado}`;
+        }
         
-        if(!confirm(`¿Confirmar reserva para ${reserva.deporte} el día ${fechaLegible} a las ${reserva.hora}?\nTotal: $${precioFormateado}`)) {
+        if (!confirm(mensajeConfirmacion)) {
             return;
         }
 
@@ -684,7 +706,8 @@
             nombre: reserva.nombre,
             celular: reserva.celular,
             estado: "Reservado",
-            monto: reserva.monto
+            monto: reserva.monto,
+            esFijo: reserva.esFijo
         };
 
         try {
@@ -696,17 +719,25 @@
 
             if (resultado.status === "success") {
                 document.getElementById('precio-info').innerText = `Precio total: $${precioFormateado}`;
+                
+                if (reserva.esFijo) {
+                    document.getElementById('msg-exito-detalle').innerHTML = `<b>¡Turno Fijo reservado para todos los ${diaNombre} a las ${reserva.hora}hs!</b><br><span style="font-size:12px; color:#666;">Recordá que en caso de querer suspender o modificar tu turno fijo en el futuro, podés comunicarte con el administrador.</span>`;
+                } else {
+                    document.getElementById('msg-exito-detalle').innerText = "Tu reserva quedó registrada en el sistema del club.";
+                }
+
                 changeStep(4);
 
                 setTimeout(function() {
-                    let mensajeWhatsApp = `¡Hola! Acabo de reservar ${reserva.deporte} para el día ${fechaLegible} a las ${reserva.hora}. Monto total: $${precioFormateado}. Mi nombre es ${reserva.nombre}.`;
+                    let tipoTexto = reserva.esFijo ? `TURNO FIJO (todos los ${diaNombre})` : `para el día ${fechaLegible}`;
+                    let mensajeWhatsApp = `¡Hola! Acabo de reservar un ${tipoTexto} para ${reserva.deporte} a las ${reserva.hora}hs. Monto por partido: $${precioFormateado}. Mi nombre es ${reserva.nombre}.`;
                     window.location.href = `https://wa.me/5492364351535?text=${encodeURIComponent(mensajeWhatsApp)}`;
                     
                     setTimeout(() => {
                         resetFormulario();
                         changeStep(1);
                     }, 1000);
-                }, 3000);
+                }, 4000);
             } else {
                 alert("Error: " + (resultado.message || "No se pudo completar"));
                 cargarHorariosDisponibles();
@@ -719,7 +750,7 @@
 
     function accesoAdministrador() {
         let pin = prompt("Ingrese la contraseña de Administrador:");
-        if (pin === "y ahora???") {
+        if (pin === "1234") {
             cargarDatosServidor().then(() => {
                 changeStep('admin-menu');
             });
@@ -849,7 +880,6 @@
         });
 
         let sumaGastosMes = gastosDelMes.reduce((acc, g) => acc + (Number(g.monto) || 0), 0);
-
         let montoConcesionClub = totalFacturadoMes * 0.20;
         let gananciaNetaSocia = totalFacturadoMes - montoConcesionClub - sumaGastosMes;
 
@@ -950,6 +980,7 @@
 
         contenedorLista.innerHTML = "";
         const ahora = new Date();
+        ahora.setHours(0, 0, 0, 0);
 
         let turnosOrdenados = [...cacheTurnosGlobal].sort((a, b) => {
             let fechaA = parsearFechaHoraObjeto(a.fecha, a.hora);
@@ -974,6 +1005,7 @@
             let deporteTurno = String(t.deporte || "").trim();
             let nombreTurno = String(t.nombre || "").toLowerCase();
             let celularTurno = String(t.celular || "").toLowerCase();
+            let esFijo = String(t.tipo || "").toUpperCase() === "FIJO";
 
             if (deporteSeleccionado !== "TODOS" && !deporteTurno.toLowerCase().includes(deporteSeleccionado.toLowerCase())) return;
 
@@ -1004,17 +1036,32 @@
                 badge = `<span class="badge-estado badge-cobrado">✅ Jugado / Cobrado</span>`;
             }
 
+            if(esFijo && esReservado) {
+                badge += ` <span class="badge-estado badge-fijo">🔄 FIJO</span>`;
+                
+                // Chequear si este turno fijo está próximo a vencer (últimos 30 días de su año)
+                let diffDays = Math.ceil((fechaObjeto.getTime() - ahora.getTime()) / (1000 * 60 * 60 * 24));
+                if (diffDays >= 0 && diffDays <= 30) {
+                    badge += ` <span class="badge-estado badge-venciendo">⚠️ Vence Pronto</span>`;
+                }
+            }
+
             let div = document.createElement('div');
             div.className = claseEstilo;
             div.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
                     <b>${t.deporte}</b>
-                    ${badge}
+                    <div>${badge}</div>
                 </div>
                 📅 <b>${t.fecha}</b> a las <b>${t.hora}hs</b><br>
                 👤 <b>${t.nombre}</b> (${t.celular})<br>
                 💰 <b>$${montoNum.toLocaleString('es-AR')}</b>
-                ${(esReservado && esFuturo) ? `<br><button class="btn-cancel-admin" onclick="cancelarTurnoAdmin('${t.fecha}', '${t.hora}', '${t.deporte}')">❌ Cancelar Turno</button>` : ''}
+                ${(esReservado && esFuturo) ? `
+                    <div style="margin-top:6px; display:flex; gap:6px;">
+                        <button class="btn-cancel-admin" onclick="cancelarTurnoAdmin('${t.fecha}', '${t.hora}', '${t.deporte}')">❌ Cancelar Fecha</button>
+                        ${esFijo ? `<button class="btn-cancel-admin" style="background-color:#4a148c;" onclick="suspenderTurnoFijoAdmin('${t.hora}', '${t.deporte}', '${t.celular}', '${t.nombre}')">🚫 Suspender Fijo Futuro</button>` : ''}
+                    </div>
+                ` : ''}
             `;
             contenedorLista.appendChild(div);
         });
@@ -1025,7 +1072,7 @@
     }
 
     async function cancelarTurnoAdmin(fecha, hora, deporte) {
-        if (!confirm(`¿Estás seguro de cancelar el turno de ${deporte} del ${fecha} a las ${hora}hs?\nEsto liberará el horario.`)) return;
+        if (!confirm(`¿Estás seguro de cancelar el turno de ${deporte} del ${fecha} a las ${hora}hs?\nEsto liberará esa fecha.`)) return;
 
         try {
             let response = await fetch(APPS_SCRIPT_URL, {
@@ -1038,12 +1085,36 @@
                 })
             });
             let resultado = await response.json();
-
             if (resultado.status === "success") {
                 alert("Turno cancelado con éxito.");
                 await cargarDatosServidor();
             } else {
                 alert("No se pudo cancelar el turno.");
+            }
+        } catch (e) {
+            alert("Error de conexión.");
+        }
+    }
+
+    async function suspenderTurnoFijoAdmin(hora, deporte, celular, nombre) {
+        if (!confirm(`¿DAR DE BAJA TURNO FIJO?\n\nSe cancelarán TODAS las fechas futuras de ${nombre} (${deporte} a las ${hora}hs).\n¿Confirmás la suspensión masiva?`)) return;
+
+        try {
+            let response = await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    accion: "suspender_fijo",
+                    hora: hora,
+                    deporte: deporte,
+                    celular: celular
+                })
+            });
+            let resultado = await response.json();
+            if (resultado.status === "success") {
+                alert("Turno fijo suspendido con éxito. Se liberaron todas las semanas futuras.");
+                await cargarDatosServidor();
+            } else {
+                alert("No se pudo suspender el turno fijo.");
             }
         } catch (e) {
             alert("Error de conexión.");
