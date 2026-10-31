@@ -41,6 +41,7 @@
             box-sizing: border-box;
             margin: 16px;
             transition: max-width 0.3s ease;
+            position: relative;
         }
 
         h2 {
@@ -285,9 +286,48 @@
         .badge-cancelado { background: #ffcdd2; color: #c62828; }
         .badge-fijo { background: #e1bee7; color: #4a148c; }
         .badge-venciendo { background: #ffccbc; color: #d84315; }
+
+        /* Estilos para el Modal de Carga Animado */
+        #modal-loader {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        .loader-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 320px;
+            width: 90%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .spinner {
+            font-size: 45px;
+            animation: girarEmoji 1.5s linear infinite;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+        @keyframes girarEmoji {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+
+<!-- MODAL DE CARGA ANIMADO -->
+<div id="modal-loader">
+    <div class="loader-card">
+        <div class="spinner" id="loader-icon">⚽</div>
+        <h3 style="color: var(--primary-color); margin: 5px 0 10px 0;" id="loader-title">Guardando tu turno...</h3>
+        <p id="loader-text" style="font-size: 13px; color: #666; margin: 0;">Por favor aguardá unos segundos mientras registramos tu reserva.</p>
+    </div>
+</div>
 
 <div class="container" id="main-container">
     <button id="btnInstall" class="install-banner">
@@ -696,8 +736,22 @@
             return;
         }
 
-        const container = document.getElementById('horarios-container');
-        container.innerHTML = "<div class='loading'>Guardando reserva en el sistema...</div>";
+        // MOSTRAR MODAL DE CARGA ANIMADO
+        const modalLoader = document.getElementById('modal-loader');
+        const loaderTitle = document.getElementById('loader-title');
+        const loaderText = document.getElementById('loader-text');
+        const loaderIcon = document.getElementById('loader-icon');
+
+        if (reserva.esFijo) {
+            loaderIcon.innerText = "🔄";
+            loaderTitle.innerText = "Generando tu Turno Fijo...";
+            loaderText.innerText = "⏳ Esto puede demorar unos segundos extra porque estamos programando tus turnos futuros. Por favor, NO cierres la página.";
+        } else {
+            loaderIcon.innerText = "⚽";
+            loaderTitle.innerText = "Guardando tu turno...";
+            loaderText.innerText = "Por favor aguardá unos segundos mientras registramos tu reserva.";
+        }
+        modalLoader.style.display = "flex";
 
         let datosReserva = {
             fecha: reserva.fecha,
@@ -716,6 +770,9 @@
                 body: JSON.stringify(datosReserva)
             });
             let resultado = await response.json();
+
+            // OCULTAR MODAL DE CARGA
+            modalLoader.style.display = "none";
 
             if (resultado.status === "success") {
                 document.getElementById('precio-info').innerText = `Precio total: $${precioFormateado}`;
@@ -743,6 +800,7 @@
                 cargarHorariosDisponibles();
             }
         } catch (e) {
+            modalLoader.style.display = "none";
             alert("Error de conexión con el servidor.");
             cargarHorariosDisponibles();
         }
@@ -750,7 +808,7 @@
 
     function accesoAdministrador() {
         let pin = prompt("Ingrese la contraseña de Administrador:");
-        if (pin === "1234") {
+        if (pin === "y ahora???") {
             cargarDatosServidor().then(() => {
                 changeStep('admin-menu');
             });
@@ -1039,7 +1097,6 @@
             if(esFijo && esReservado) {
                 badge += ` <span class="badge-estado badge-fijo">🔄 FIJO</span>`;
                 
-                // Chequear si este turno fijo está próximo a vencer (últimos 30 días de su año)
                 let diffDays = Math.ceil((fechaObjeto.getTime() - ahora.getTime()) / (1000 * 60 * 60 * 24));
                 if (diffDays >= 0 && diffDays <= 30) {
                     badge += ` <span class="badge-estado badge-venciendo">⚠️ Vence Pronto</span>`;
