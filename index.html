@@ -397,13 +397,21 @@
         <button class="action-btn" style="background-color: #78909c; margin-top: 15px;" onclick="changeStep(2)">Volver</button>
     </div>
 
-    <!-- PASO 4: Éxito / Confirmación -->
+    <!-- PASO 4: Éxito / Confirmación con opciones -->
     <div id="step-4" class="step">
         <div style="text-align: center; padding: 10px;">
             <h2 style="color: var(--success-color);">¡Turno confirmado con éxito! 🎉</h2>
             <p id="msg-exito-detalle">Tu reserva quedó registrada en el sistema del club.</p>
-            <p id="precio-info" style="font-weight: bold; color: var(--primary-color); font-size: 18px;"></p>
-            <p><b>Serás redirigido a WhatsApp automáticamente...</b></p>
+            <p id="precio-info" style="font-weight: bold; color: var(--primary-color); font-size: 18px; margin-bottom: 20px;"></p>
+            
+            <!-- Botones de Acción Post-Reserva -->
+            <a id="btn-enviar-wa" href="#" target="_blank" class="action-btn" style="background-color: #25d366; text-decoration: none; display: block; margin-bottom: 10px; box-sizing: border-box;">
+                💬 Enviar confirmación por WhatsApp
+            </a>
+            
+            <button class="action-btn" style="background-color: #78909c;" onclick="finalizarYVolverInicio()">
+                🏠 Volver al inicio de la App
+            </button>
         </div>
     </div>
 
@@ -541,7 +549,7 @@
         }
     });
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby8GRxryNd7wDMNEdGwWIkQ-nV0V68dKZFIUxrxb34A_F96sE1En_w-Eus5QY-G6DcE/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx2gzwyBBagoumSxtzWR5jlUEUCg-vzuXeo2hW7dO9m_2CbrPwgyFd2A_OiJc8mauMm/exec";
 
     const PRECIOS = {
         'Fútbol 5': 40000,
@@ -580,6 +588,11 @@
         document.getElementById('fecha').value = "";
         document.getElementById('chk-turno-fijo').checked = false;
         document.getElementById('horarios-container').innerHTML = "";
+    }
+
+    function finalizarYVolverInicio() {
+        resetFormulario();
+        changeStep(1);
     }
 
     function changeStep(stepIdentifier) {
@@ -783,18 +796,12 @@
                     document.getElementById('msg-exito-detalle').innerText = "Tu reserva quedó registrada en el sistema del club.";
                 }
 
-                changeStep(4);
+                // Configurar enlace de WhatsApp en el botón
+                let tipoTexto = reserva.esFijo ? `TURNO FIJO (todos los ${diaNombre})` : `para el día ${fechaLegible}`;
+                let mensajeWhatsApp = `¡Hola! Acabo de reservar un ${tipoTexto} para ${reserva.deporte} a las ${reserva.hora}hs. Monto por partido: $${precioFormateado}. Mi nombre es ${reserva.nombre}.`;
+                document.getElementById('btn-enviar-wa').href = `https://wa.me/5492364351535?text=${encodeURIComponent(mensajeWhatsApp)}`;
 
-                setTimeout(function() {
-                    let tipoTexto = reserva.esFijo ? `TURNO FIJO (todos los ${diaNombre})` : `para el día ${fechaLegible}`;
-                    let mensajeWhatsApp = `¡Hola! Acabo de reservar un ${tipoTexto} para ${reserva.deporte} a las ${reserva.hora}hs. Monto por partido: $${precioFormateado}. Mi nombre es ${reserva.nombre}.`;
-                    window.location.href = `https://wa.me/5492364351535?text=${encodeURIComponent(mensajeWhatsApp)}`;
-                    
-                    setTimeout(() => {
-                        resetFormulario();
-                        changeStep(1);
-                    }, 1000);
-                }, 4000);
+                changeStep(4);
             } else {
                 alert("Error: " + (resultado.message || "No se pudo completar"));
                 cargarHorariosDisponibles();
