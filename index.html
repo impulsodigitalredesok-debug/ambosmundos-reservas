@@ -375,7 +375,7 @@
         <input type="date" id="fecha" onchange="cargarHorariosDisponibles()">
         <label class="checkbox-fijo-box">
             <input type="checkbox" id="chk-turno-fijo">
-            <span style="font-weight: bold; color: var(--primary-color);">🔄 Turno Fijo (cada 6 meses)</span>
+            <span style="font-weight: bold; color: var(--primary-color);">🔄 Turno Fijo</span>
         </label>
         <div id="loading-horarios" class="loading" style="display: none;">Cargando turnos disponibles...</div>
         <div id="horarios-container" style="max-height: 260px; overflow-y: auto; margin-top: 10px;"></div>
@@ -599,7 +599,7 @@
         changeStep(3);
     }
 
-    function obtenerHorarios(deporte) {
+    function obtenerHorarios(deporte, fechaInput) {
         let horarios = [];
         if (deporte === 'Pádel') {
             let minutosTotal = 9 * 60; 
@@ -615,6 +615,25 @@
                 horarios.push(`${String(h).padStart(2, '0')}:00`);
             }
         }
+
+        let ahora = new Date();
+        let anioH = ahora.getFullYear();
+        let mesH = String(ahora.getMonth() + 1).padStart(2, '0');
+        let diaH = String(ahora.getDate()).padStart(2, '0');
+        let fechaHoyStr = `${anioH}-${mesH}-${diaH}`;
+
+        if (fechaInput === fechaHoyStr) {
+            let horaActual = ahora.getHours();
+            let minutoActual = ahora.getMinutes();
+            let minutosTotalesActuales = (horaActual * 60) + minutoActual;
+
+            horarios = horarios.filter(hStr => {
+                let [hTurno, mTurno] = hStr.split(':').map(Number);
+                let minutosTotalesTurno = (hTurno * 60) + mTurno;
+                return minutosTotalesTurno > minutosTotalesActuales;
+            });
+        }
+
         return horarios;
     }
 
@@ -638,7 +657,12 @@
         }
 
         loader.style.display = "none";
-        const horasPosibles = obtenerHorarios(reserva.deporte);
+        const horasPosibles = obtenerHorarios(reserva.deporte, fechaInput);
+
+        if (horasPosibles.length === 0) {
+            container.innerHTML = "<p style='text-align:center; color:#e53935; font-size:13px;'>No quedan horarios disponibles para el día de hoy.</p>";
+            return;
+        }
 
         horasPosibles.forEach(hora => {
             let ocupado = chequearDisponibilidad(reserva.deporte, reserva.fecha, hora);
@@ -705,7 +729,7 @@
 
         let mensajeConfirmacion = "";
         if (reserva.esFijo) {
-            mensajeConfirmacion = `Vas a reservar un TURNO FIJO para ${reserva.deporte} todos los ${diaNombre} a las ${reserva.hora}hs.\n¿Deseás confirmar la reserva permanente?`;
+            mensajeConfirmacion = `Vas a reservar un TURNO FIJO para ${reserva.deporte} todos los ${diaNombre} a las ${reserva.hora}hs.\nPrecio por turno: $${precioFormateado}\n¿Deseás confirmar la reserva permanente?`;
         } else {
             mensajeConfirmacion = `¿Confirmar reserva para ${reserva.deporte} el día ${fechaLegible} a las ${reserva.hora}hs?\nTotal: $${precioFormateado}`;
         }
@@ -719,12 +743,14 @@
         const loaderText = document.getElementById('loader-text');
         const loaderIcon = document.getElementById('loader-icon');
 
+        let esPadel = reserva.deporte.toLowerCase().includes('pádel') || reserva.deporte.toLowerCase().includes('padel');
+
         if (reserva.esFijo) {
-            loaderIcon.innerText = "🔄";
+            loaderIcon.innerText = esPadel ? "🎾🔄" : "⚽🔄";
             loaderTitle.innerText = "Generando tu Turno Fijo...";
             loaderText.innerText = "⏳ Esto puede demorar unos segundos extra porque estamos programando tus turnos futuros. Por favor, NO cierres la página.";
         } else {
-            loaderIcon.innerText = "⚽";
+            loaderIcon.innerText = esPadel ? "🎾" : "⚽";
             loaderTitle.innerText = "Guardando tu turno...";
             loaderText.innerText = "Por favor aguardá unos segundos mientras registramos tu reserva.";
         }
@@ -751,16 +777,16 @@
             modalLoader.style.display = "none";
 
             if (resultado.status === "success") {
-                document.getElementById('precio-info').innerText = `Precio total por turno: $${precioFormateado}`;
-                
                 if (reserva.esFijo) {
+                    document.getElementById('precio-info').innerText = `Precio por turno: $${precioFormateado}`;
                     document.getElementById('msg-exito-detalle').innerHTML = `<b>¡Turno Fijo reservado para todos los ${diaNombre} a las ${reserva.hora}hs!</b><br><span style="font-size:12px; color:#666;">Recordá que en caso de querer suspender o modificar tu turno fijo en el futuro, podés comunicarte con el administrador.</span>`;
                 } else {
+                    document.getElementById('precio-info').innerText = `Precio total: $${precioFormateado}`;
                     document.getElementById('msg-exito-detalle').innerText = "Tu reserva quedó registrada en el sistema del club.";
                 }
 
                 let tipoTexto = reserva.esFijo ? `TURNO FIJO (todos los ${diaNombre})` : `para el día ${fechaLegible}`;
-                let mensajeWhatsApp = `¡Hola! Acabo de reservar un ${tipoTexto} para ${reserva.deporte} a las ${reserva.hora}hs. Monto por partido: $${precioFormateado}. Mi nombre es ${reserva.nombre}.`;
+                let mensajeWhatsApp = `¡Hola! Acabo de reservar un ${tipoTexto} para ${reserva.deporte} a las ${reserva.hora}hs. Precio por partido: $${precioFormateado}. Mi nombre es ${reserva.nombre}.`;
                 document.getElementById('btn-enviar-wa').href = `https://wa.me/5492364351535?text=${encodeURIComponent(mensajeWhatsApp)}`;
 
                 changeStep(4);
@@ -1034,7 +1060,6 @@
         turnosOrdenados.forEach(t => {
             let estadoRaw = String(t.estado || "Reservado").trim().toLowerCase();
             
-            // OCULTAR COMPLETAMENTE LOS CANCELADOS
             if (estadoRaw === "cancelado") return;
 
             let montoNum = Number(t.monto) || 0;
@@ -1046,16 +1071,13 @@
             let celularTurno = String(t.celular || "").toLowerCase();
             let esFijo = String(t.tipo || "").toUpperCase() === "FIJO";
 
-            // Filtro por deporte
             if (deporteSeleccionado !== "TODOS" && !deporteTurno.toLowerCase().includes(deporteSeleccionado.toLowerCase())) return;
 
-            // Filtro por estado avanzado
             if (estadoSeleccionado === "PENDIENTE" && !(estadoRaw === "reservado" && esFuturo)) return;
             if (estadoSeleccionado === "JUGADO" && !(estadoRaw === "jugado" || (estadoRaw === "reservado" && !esFuturo))) return;
             if (estadoSeleccionado === "NO_JUGADO" && estadoRaw !== "no jugado") return;
             if (estadoSeleccionado === "FIJO" && !esFijo) return;
 
-            // Filtro por fechas
             if (fechaObjeto.getTime() !== 0) {
                 let anioT = fechaObjeto.getFullYear();
                 let mesT = String(fechaObjeto.getMonth() + 1).padStart(2, '0');
@@ -1066,7 +1088,6 @@
                 if (fechaHasta && fechaTurnoStr > fechaHasta) return;
             }
 
-            // Filtro por texto
             if (textoBusqueda !== "" && !nombreTurno.includes(textoBusqueda) && !celularTurno.includes(textoBusqueda)) return;
 
             contadorVisibles++;
@@ -1092,9 +1113,8 @@
                 }
             }
 
-            // Botón "No Jugado" solo si el turno ya pasó (esPasado) y no está marcado ya como tal
             let mostrarBtnNoJugado = !esFuturo && estadoRaw !== "no jugado";
-            let mostrarBtnJugado = estadoRaw === "no jugado"; // Para poder revertir si se tocó por error
+            let mostrarBtnJugado = estadoRaw === "no jugado";
 
             let div = document.createElement('div');
             div.className = claseEstilo;
