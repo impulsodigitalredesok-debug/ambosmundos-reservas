@@ -268,7 +268,6 @@
             font-size: 13px;
         }
         .reserva-item.pasado { border-left-color: #9e9e9e; background: #f0f0f0; }
-        .reserva-item.cancelado { border-left-color: var(--danger-color); opacity: 0.6; text-decoration: line-through; }
         .reserva-item.no-jugado { border-left-color: var(--warning-color); background: #fff8e1; }
         
         .btn-accion-admin {
@@ -282,13 +281,13 @@
         }
         .btn-cancelar { background-color: var(--danger-color); }
         .btn-no-jugado { background-color: var(--warning-color); }
+        .btn-jugado { background-color: var(--success-color); }
         .btn-eliminar-gasto { background-color: var(--danger-color); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: bold; }
 
         .loading { text-align: center; font-style: italic; color: #666; margin: 10px 0; }
         .badge-estado { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
         .badge-pendiente { background: #ffe0b2; color: #e65100; }
         .badge-cobrado { background: #c8e6c9; color: #2e7d32; }
-        .badge-cancelado { background: #ffcdd2; color: #c62828; }
         .badge-no-jugado { background: #ffe082; color: #f57f17; }
         .badge-fijo { background: #e1bee7; color: #4a148c; }
         .badge-venciendo { background: #ffccbc; color: #d84315; }
@@ -456,7 +455,6 @@
                         <option value="PENDIENTE">⏳ Pendientes</option>
                         <option value="JUGADO">✅ Jugados / Cobrados</option>
                         <option value="NO_JUGADO">⚠️ No Jugados</option>
-                        <option value="CANCELADO">❌ Cancelados</option>
                         <option value="FIJO">🔄 Turnos Fijos</option>
                     </select>
                 </div>
@@ -515,7 +513,7 @@
         }
     });
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxl7DFT46RaBzzYWEihP_N99MRlkgGnOGh-fRg2bj7p0WBEeM5ZJLKF3UuWSXmA9BX_/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZg9ylgmq-nTDmmRfc4HbDCTEn0JtP-3oWLs0Jj_6ukxEra1STeMDiVKSR8t6NWs1d/exec";
 
     const PRECIOS = {
         'Fútbol 5': 40000,
@@ -707,7 +705,7 @@
 
         let mensajeConfirmacion = "";
         if (reserva.esFijo) {
-            mensajeConfirmacion = `Vas a reservar un TURNO FIJO (6 meses) para ${reserva.deporte} todos los ${diaNombre} a las ${reserva.hora}hs.\n¿Deseás confirmar la reserva permanente?`;
+            mensajeConfirmacion = `Vas a reservar un TURNO FIJO para ${reserva.deporte} todos los ${diaNombre} a las ${reserva.hora}hs.\n¿Deseás confirmar la reserva permanente?`;
         } else {
             mensajeConfirmacion = `¿Confirmar reserva para ${reserva.deporte} el día ${fechaLegible} a las ${reserva.hora}hs?\nTotal: $${precioFormateado}`;
         }
@@ -885,7 +883,6 @@
 
         cacheTurnosGlobal.forEach(t => {
             let estadoTurno = String(t.estado || "Reservado").trim().toLowerCase();
-            // Solo suma a la caja los que están explícitamente jugados o los pasados que no fueron cancelados ni marcados como no jugados
             let montoNum = Number(t.monto) || 0;
             let fObj = parsearFechaHoraObjeto(t.fecha, t.hora);
             let esPasado = fObj < ahora;
@@ -1036,6 +1033,10 @@
 
         turnosOrdenados.forEach(t => {
             let estadoRaw = String(t.estado || "Reservado").trim().toLowerCase();
+            
+            // OCULTAR COMPLETAMENTE LOS CANCELADOS
+            if (estadoRaw === "cancelado") return;
+
             let montoNum = Number(t.monto) || 0;
             let fechaObjeto = parsearFechaHoraObjeto(t.fecha, t.hora);
             let esFuturo = fechaObjeto >= ahora;
@@ -1052,7 +1053,6 @@
             if (estadoSeleccionado === "PENDIENTE" && !(estadoRaw === "reservado" && esFuturo)) return;
             if (estadoSeleccionado === "JUGADO" && !(estadoRaw === "jugado" || (estadoRaw === "reservado" && !esFuturo))) return;
             if (estadoSeleccionado === "NO_JUGADO" && estadoRaw !== "no jugado") return;
-            if (estadoSeleccionado === "CANCELADO" && estadoRaw !== "cancelado") return;
             if (estadoSeleccionado === "FIJO" && !esFijo) return;
 
             // Filtro por fechas
@@ -1074,10 +1074,7 @@
             let claseEstilo = "reserva-item";
             let badge = "";
 
-            if (estadoRaw === "cancelado") {
-                claseEstilo = "reserva-item cancelado";
-                badge = `<span class="badge-estado badge-cancelado">Cancelado</span>`;
-            } else if (estadoRaw === "no jugado") {
+            if (estadoRaw === "no jugado") {
                 claseEstilo = "reserva-item no-jugado";
                 badge = `<span class="badge-estado badge-no-jugado">⚠️ No Jugado</span>`;
             } else if (estadoRaw === "jugado" || !esFuturo) {
@@ -1095,6 +1092,10 @@
                 }
             }
 
+            // Botón "No Jugado" solo si el turno ya pasó (esPasado) y no está marcado ya como tal
+            let mostrarBtnNoJugado = !esFuturo && estadoRaw !== "no jugado";
+            let mostrarBtnJugado = estadoRaw === "no jugado"; // Para poder revertir si se tocó por error
+
             let div = document.createElement('div');
             div.className = claseEstilo;
             div.innerHTML = `
@@ -1106,8 +1107,9 @@
                 👤 <b>${t.nombre}</b> (${t.celular})<br>
                 💰 <b>$${montoNum.toLocaleString('es-AR')}</b>
                 <div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">
-                    ${estadoRaw !== "cancelado" ? `<button class="btn-accion-admin btn-cancelar" onclick="cambiarEstadoTurno('${t.fecha}', '${t.hora}', '${t.deporte}', 'Cancelado')">❌ Cancelar</button>` : ''}
-                    ${estadoRaw !== "no jugado" && estadoRaw !== "cancelado" ? `<button class="btn-accion-admin btn-no-jugado" onclick="cambiarEstadoTurno('${t.fecha}', '${t.hora}', '${t.deporte}', 'No Jugado')">⚠️ No Jugado</button>` : ''}
+                    <button class="btn-accion-admin btn-cancelar" onclick="cambiarEstadoTurno('${t.fecha}', '${t.hora}', '${t.deporte}', 'Cancelado')">❌ Cancelar</button>
+                    ${mostrarBtnNoJugado ? `<button class="btn-accion-admin btn-no-jugado" onclick="cambiarEstadoTurno('${t.fecha}', '${t.hora}', '${t.deporte}', 'No Jugado')">⚠️ No Jugado</button>` : ''}
+                    ${mostrarBtnJugado ? `<button class="btn-accion-admin btn-jugado" onclick="cambiarEstadoTurno('${t.fecha}', '${t.hora}', '${t.deporte}', 'Jugado')">✅ Marcar como Jugado</button>` : ''}
                     ${esFijo && estadoRaw === "reservado" ? `<button class="btn-accion-admin" style="background-color:#4a148c;" onclick="suspenderTurnoFijoAdmin('${t.hora}', '${t.deporte}', '${t.celular}', '${t.nombre}')">🚫 Suspender Fijo Futuro</button>` : ''}
                 </div>
             `;
@@ -1120,7 +1122,7 @@
     }
 
     async function cambiarEstadoTurno(fecha, hora, deporte, nuevoEstado) {
-        if (!confirm(`¿Marcar turno de ${deporte} del ${fecha} a las ${hora}hs como "${nuevoEstado}"?`)) return;
+        if (!confirm(`¿Estás seguro de marcar el turno de ${deporte} del ${fecha} a las ${hora}hs como "${nuevoEstado}"?`)) return;
 
         try {
             let response = await fetch(APPS_SCRIPT_URL, {
