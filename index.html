@@ -362,7 +362,7 @@
         <h3>Tus datos</h3>
         <label for="nombre">Nombre:</label>
         <input type="text" id="nombre" placeholder="Ingresá tu nombre">
-        <label for="celular">Celular (10 dígitos sin 0 ni 15):</label>
+        <label for="celular">Celular (sin 0 ni 15):</label>
         <input type="tel" id="celular" placeholder="Ej: 2364123456" maxlength="10">
         <button class="action-btn" onclick="validateStep2()">Continuar</button>
         <button class="action-btn" style="background-color: #78909c;" onclick="changeStep(1)">Volver</button>
@@ -746,7 +746,7 @@
         let esPadel = reserva.deporte.toLowerCase().includes('pádel') || reserva.deporte.toLowerCase().includes('padel');
 
         if (reserva.esFijo) {
-            loaderIcon.innerText = esPadel ? "🎾🔄" : "⚽🔄";
+            loaderIcon.innerText = esPadel ? "🎾" : "⚽";
             loaderTitle.innerText = "Generando tu Turno Fijo...";
             loaderText.innerText = "⏳ Esto puede demorar unos segundos extra porque estamos programando tus turnos futuros. Por favor, NO cierres la página.";
         } else {
