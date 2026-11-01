@@ -601,17 +601,19 @@
 
     function obtenerHorarios(deporte, fechaInput) {
         let horarios = [];
-        if (deporte === 'Pádel') {
+        let deporteNorm = String(deporte).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+        if (deporteNorm.includes('padel')) {
             let minutosTotal = 9 * 60; 
-            let finJornada = 23 * 60;  
+            let finJornada = (22 * 60) + 30; // Último turno 22:30 para terminar a las 00:00
             while (minutosTotal <= finJornada) {
                 let h = Math.floor(minutosTotal / 60);
                 let m = minutosTotal % 60;
                 horarios.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
-                minutosTotal += 90; 
+                minutosTotal += 30; // CADA 30 MINUTOS EN PÁDEL
             }
         } else {
-            for (let h = 9; h <= 23; h++) {
+            for (let h = 9; h <= 23; h++) { // Fútbol de 09:00 hasta 23:00 (termina a las 00:00)
                 horarios.push(`${String(h).padStart(2, '0')}:00`);
             }
         }
@@ -679,15 +681,45 @@
 
     function chequearDisponibilidad(deporte, fechaInput, hora) {
         let fechaBusqueda = formatearFechaDDMMYYYY(fechaInput); 
-        let targetHora = String(hora).substring(0, 5).trim();
-        
-        let matchFechaHora = reservasOcupadas.filter(r => {
+        let targetHoraStr = String(hora).substring(0, 5).trim();
+        let deporteNorm = String(deporte).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+        let reservasMismaFecha = reservasOcupadas.filter(r => {
             if (!r.fecha || !r.hora) return false;
             let fSheet = String(r.fecha).replace(/'/, '').trim();
-            let hSheet = String(r.hora).replace(/'/, '').substring(0, 5).trim();
             let est = String(r.estado || "Reservado").trim().toLowerCase();
             let estadoValido = (est === "reservado" || est === "jugado");
-            return fSheet === fechaBusqueda && hSheet === targetHora && estadoValido;
+            return fSheet === fechaBusqueda && estadoValido;
+        });
+
+        // LÓGICA DE PÁDEL (2 canchas, control de solapamiento de 90 min)
+        if (deporteNorm.includes('padel')) {
+            let [tH, tM] = targetHoraStr.split(':').map(Number);
+            let targetStart = (tH * 60) + tM;
+            let targetEnd = targetStart + 90;
+
+            let choques = 0;
+            reservasMismaFecha.forEach(r => {
+                let dSheet = String(r.deporte || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                if (dSheet.includes('padel')) {
+                    let hSheet = String(r.hora).replace(/'/, '').substring(0, 5).trim();
+                    let [sH, sM] = hSheet.split(':').map(Number);
+                    let existingStart = (sH * 60) + sM;
+                    let existingEnd = existingStart + 90;
+
+                    if (targetStart < existingEnd && existingStart < targetEnd) {
+                        choques++;
+                    }
+                }
+            });
+
+            return choques >= 2; // Si ambas canchas están ocupadas en ese bloque, no disponible
+        }
+
+        // LÓGICA DE FÚTBOL (Intacta)
+        let matchFechaHora = reservasMismaFecha.filter(r => {
+            let hSheet = String(r.hora).replace(/'/, '').substring(0, 5).trim();
+            return hSheet === targetHoraStr;
         });
 
         let hayFutbol9 = matchFechaHora.some(r => {
@@ -700,22 +732,13 @@
             return d.includes('futbol 5');
         }).length;
 
-        let cantPadel = matchFechaHora.filter(r => {
-            let d = String(r.deporte || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-            return d.includes('padel');
-        }).length;
-
-        let deporteNorm = String(deporte).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-
         if (deporteNorm.includes('futbol 9')) {
             return hayFutbol9 || cantFutbol5 > 0;
         }
         if (deporteNorm.includes('futbol 5')) {
             return hayFutbol9 || cantFutbol5 >= 3;
         }
-        if (deporteNorm.includes('padel')) {
-            return cantPadel >= 2;
-        }
+
         return false;
     }
 
